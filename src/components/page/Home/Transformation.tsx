@@ -77,7 +77,7 @@ export default function Transformation() {
     return (
         <section
             ref={sectionRef}
-            className="relative w-full overflow-hidden rounded-t-4xl text-white sm:rounded-t-[48px] lg:rounded-t-[64px] pt-14 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24"
+            className="relative w-full overflow-hidden rounded-t-4xl text-white sm:rounded-t-[48px] lg:rounded-t-[64px] pt-14 pb-20 sm:pt-20 sm:pb-24 lg:pt-24 lg:pb-32"
             style={{
                 background: `
                     radial-gradient(ellipse 70% 35% at 50% 100%, #7E7A2C 0%, transparent 75%),
