@@ -1,3 +1,4 @@
+import About from "@/components/page/Home/About";
 import Approach from "@/components/page/Home/Approach";
 import Conversation from "@/components/page/Home/Conversation";
 import DeeperPattern from "@/components/page/Home/DeeperPattern";
@@ -16,6 +17,7 @@ export default function Home() {
       <Transformation />
       <Services />
       <Conversation />
+      <About />
     </main>
   );
 }
