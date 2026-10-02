@@ -77,7 +77,7 @@ export default function Transformation() {
     return (
         <section
             ref={sectionRef}
-            className="relative w-full overflow-hidden rounded-t-4xl text-white sm:rounded-t-[48px] lg:rounded-t-[64px]"
+            className="relative w-full overflow-hidden rounded-t-4xl text-white sm:rounded-t-[48px] lg:rounded-t-[64px] pt-14 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24"
             style={{
                 background: `
                     radial-gradient(ellipse 70% 35% at 50% 100%, #7E7A2C 0%, transparent 75%),
@@ -86,8 +86,8 @@ export default function Transformation() {
                 `,
             }}
         >
-            <div className="mx-auto w-full max-w-7xl px-4 pt-14 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24">
-                <h2 className="mx-auto max-w-md text-center font-serif text-3xl italic leading-[1.1] tracking-tight sm:text-4xl md:text-5xl">
+            <div className="mx-auto w-full max-w-7xl px-4 pb-12">
+                <h2 className="mx-auto max-w-xl text-center font-serif text-3xl italic leading-[1.1] tracking-tight sm:text-4xl md:text-5xl">
                     Imagine if this stopped taking so much energy.
                 </h2>
             </div>
@@ -107,10 +107,10 @@ export default function Transformation() {
                     className="absolute inset-y-0 left-1/2 right-0 bg-black/15"
                 />
 
-                <span className="absolute left-4 top-2 z-30 text-sm sm:left-8">
+                <span className="absolute left-4 top-2 z-30 text-xl sm:left-20">
                     After
                 </span>
-                <span className="absolute right-4 top-2 z-30 text-sm sm:right-8">
+                <span className="absolute right-4 top-2 z-30 text-xl sm:right-20">
                     Before
                 </span>
 
@@ -142,7 +142,7 @@ export default function Transformation() {
                 {/* Divider line */}
                 <div
                     aria-hidden
-                    className="absolute inset-y-0 left-1/2 z-20 w-px bg-linear-to-b from-transparent via-[#E8B84A] to-transparent"
+                    className="absolute inset-y-0 left-1/2 z-20 w-px bg-linear-to-b from-transparent via-[#E8B84A] to-transparent z-40"
                 />
 
                 {/* Centre card: after (left half) / before (right half) */}
@@ -168,10 +168,10 @@ export default function Transformation() {
             </div>
 
             {/* Closing statement */}
-            <div className="relative z-10 -mt-6 flex flex-col items-center px-4 text-center sm:-mt-10">
-                <CompassIcon className="h-14 w-14 sm:h-16 sm:w-16" />
+            <div className="relative z-10 -mt-6 flex flex-col items-center px-4 text-center sm:-mt-60">
+                <CompassIcon className="h-14 w-14 sm:h-32 sm:w-32" />
 
-                <p className="mt-4 max-w-md font-serif text-base italic leading-snug tracking-tight sm:text-lg">
+                <p className="mt-4 max-w-2xl font-serif text-base italic leading-snug tracking-tight sm:text-2xl">
                     The goal isn&apos;t to become someone else.
                     <br />
                     It&apos;s to make it easier to be the person you already
