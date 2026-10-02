@@ -14,25 +14,25 @@ const TESTIMONIALS = [
         id: "daniel",
         name: "Daniel Reyes",
         avatar: "/image/testimonial-2.webp",
-        quote: "I stopped bracing for the same argument. Something quietly shifted after our second session.",
+        quote: "I stopped bracing for the same argument. Something quietly shifted.",
     },
     {
         id: "maya",
         name: "Maya Chen",
         avatar: "/image/testimonial-3.webp",
-        quote: "Lina never pushed. She just asked better questions than I had been asking myself.",
+        quote: "Lina never pushed. She simply asked better questions than I had.",
     },
     {
         id: "tom",
         name: "Tom Alder",
         avatar: "/image/testimonial-4.webp",
-        quote: "Sleep came back first. Then the overthinking got a lot quieter.",
+        quote: "Sleep came back first. Then the overthinking grew much quieter.",
     },
     {
         id: "priya",
         name: "Priya Nair",
         avatar: "/image/testimonial-5.webp",
-        quote: "It felt like a conversation, not a treatment. I left lighter every time.",
+        quote: "It felt like a conversation, not treatment. I left lighter every time.",
     },
 ];
 
@@ -117,7 +117,7 @@ export default function Testimonials() {
                 <div
                     role="tablist"
                     aria-label="Choose a testimonial"
-                    className="flex items-center justify-center gap-1.5"
+                    className="mt-2 flex items-center justify-center gap-1.5"
                 >
                     {TESTIMONIALS.map((t, i) => (
                         <button

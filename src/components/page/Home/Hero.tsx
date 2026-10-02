@@ -53,7 +53,7 @@ export default function Hero() {
 
                 <div
                     ref={cardRef}
-                    className="w-full max-w-sm self-end rounded-xl bg-black/20 p-6 text-white backdrop-blur-md sm:max-w-md sm:p-6 lg:max-w-130"
+                    className="w-full max-w-sm self-end rounded-xl bg-linear-to-b from-[#2F200D]/90 via-[#2F200D]/50 to-transparent p-6 text-white backdrop-blur-xs sm:max-w-md sm:p-6 lg:max-w-130"
                 >
                     <div className="mb-4 flex items-center gap-2 text-base font-medium">
                         <MoonIcon />

@@ -7,35 +7,40 @@ const SERVICES = [
         title: "Anxiety & overthinking",
         image: "/image/service-01.webp",
         alt: "Woman with closed eyes while a therapist rests a hand on her forehead",
-        className: "md:row-span-2 md:col-span-1",
+        // 2 rows = 480px
+        className: "md:row-span-2 md:col-span-1 md:h-[480px]",
     },
     {
         id: "02",
         title: "Confidence & self-belief",
         image: "/image/service-02.webp",
         alt: "Woman sitting calmly with eyes closed while Lina stands behind her",
-        className: "md:row-span-2 md:col-span-1",
+        // 2 rows = 480px
+        className: "md:row-span-2 md:col-span-1 md:h-[480px]",
     },
     {
         id: "03",
         title: "Stress & emotional overload",
         image: "/image/service-03.webp",
         alt: "Man lying down while a therapist places a hand near his head",
-        className: "md:col-span-2",
+        // 1 row = 232px (derived from 480px / 2 rows)
+        className: "md:col-span-2 md:h-[232px]",
     },
     {
         id: "04",
         title: "Habits & unwanted patterns",
         image: "/image/service-04.webp",
         alt: "Woman lying on a mat as a therapist kneels beside her",
-        className: "md:col-span-2",
+        // 1 row = 232px
+        className: "md:col-span-2 md:h-[232px]",
     },
     {
         id: "05",
         title: "Fears & phobias",
         image: "/image/service-05.webp",
         alt: "Therapist holding a hand above a person resting on a cushion",
-        className: "md:col-span-2",
+        // 1 row = 232px
+        className: "md:col-span-2 md:h-[232px]",
     },
 ];
 
@@ -56,11 +61,12 @@ export default function Services() {
                     </p>
                 </div>
 
-                <ul className="mt-10 grid grid-cols-1 gap-3 sm:mt-12 md:grid-cols-4 md:auto-rows-[160px] md:gap-4 lg:auto-rows-[190px]">
+                {/* Updated auto-rows to 232px to match the new row height math */}
+                <ul className="mt-10 grid grid-cols-1 gap-3 sm:mt-12 md:grid-cols-4 md:auto-rows-[232px] md:gap-4">
                     {SERVICES.map((s) => (
                         <li
                             key={s.id}
-                            className={`group relative h-64 overflow-hidden rounded-2xl md:h-auto ${s.className}`}
+                            className={`group relative overflow-hidden rounded-2xl h-64 ${s.className}`}
                         >
                             <Image
                                 src={s.image}
@@ -85,7 +91,8 @@ export default function Services() {
 
                     {/* 06 – text card */}
                     <li
-                        className="relative flex h-64 flex-col overflow-hidden rounded-2xl bg-white p-5 md:col-span-2 md:h-auto"
+                        // Updated to 232px to match the 1-row height of services 3-5
+                        className="relative flex h-64 flex-col overflow-hidden rounded-2xl bg-white p-5 md:col-span-2 md:h-[232px]"
                         style={{
                             background: `
                                 radial-gradient(ellipse 60% 70% at 100% 0%, #B9DA9A 0%, transparent 70%),

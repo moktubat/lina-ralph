@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import SmoothScrollProvider from "@/components/providers/SmoothScrollProvider";
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SmoothScrollProvider>
           <Navbar />
           {children}
+          <Footer />
         </SmoothScrollProvider>
       </body>
     </html>

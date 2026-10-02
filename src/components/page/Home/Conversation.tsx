@@ -56,20 +56,20 @@ export default function Conversation() {
 
                 <ol className="mt-16 grid gap-6 sm:mt-24 md:grid-cols-3 md:gap-4 lg:mt-40 lg:gap-6">
                     {STEPS.map((s) => (
-                        <li key={s.step} className="flex flex-col items-start">
-                            <span className="rounded-t-lg bg-[#3A3026]/80 px-4 py-1.5 text-xs text-white backdrop-blur-md">
+                        <li key={s.step} className="flex flex-col gap-2 items-start">
+                            <span className="rounded-md bg-[#534131]/80 px-4 py-1.5 text-sm text-white backdrop-blur-md">
                                 {s.step}
                             </span>
 
-                            <div className="w-full rounded-b-xl rounded-tr-xl bg-[#3A3026]/75 p-5 pb-8 text-white backdrop-blur-md sm:p-6 sm:pb-10">
-                                <span className="grid h-10 w-10 place-items-center rounded-md bg-linear-to-b from-[#6CC08C] to-[#D4A62A] text-white">
+                            <div className="w-full rounded-b-xl rounded-md bg-linear-to-b from-[#403B25]/90 via-[#403B25]/50 to-transparent p-5 pb-8 text-white backdrop-blur-xs sm:p-6 sm:pb-10">
+                                <span className="grid h-10 w-10 place-items-center rounded-sm bg-linear-to-b from-[#6CC08C] to-[#D4A62A] text-white">
                                     <span className="h-5 w-5">{s.icon}</span>
                                 </span>
 
-                                <h3 className="mt-6 text-base font-medium sm:text-lg">
+                                <h3 className="mt-6 text-lg sm:text-xl">
                                     {s.title}
                                 </h3>
-                                <p className="mt-2 text-xs font-light text-white/80 sm:text-sm">
+                                <p className="mt-4 text-xs font-light text-white/80 sm:text-sm">
                                     {s.description}
                                 </p>
                             </div>
