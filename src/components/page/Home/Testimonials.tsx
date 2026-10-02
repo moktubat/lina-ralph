@@ -70,7 +70,7 @@ export default function Testimonials() {
             onBlurCapture={() => setPaused(false)}
         >
             <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:py-20 lg:py-24">
-                <h2 className="text-center font-serif text-3xl italic leading-[1.1] tracking-tight sm:text-4xl">
+                <h2 className="mx-auto max-w-xl text-center font-serif text-3xl italic leading-[1.1] tracking-tight sm:text-4xl md:text-5xl">
                     Don&apos;t just take Lina&apos;s word for it.
                 </h2>
 
@@ -87,7 +87,7 @@ export default function Testimonials() {
                                 : "pointer-events-none translate-y-2 opacity-0"
                                 }`}
                         >
-                            <span className="relative h-12 w-12 overflow-hidden rounded-full border border-white/70">
+                            <span className="relative h-16 w-16 overflow-hidden rounded-full border border-white/70">
                                 <Image
                                     src={t.avatar}
                                     alt=""
@@ -99,15 +99,15 @@ export default function Testimonials() {
 
                             <Stars />
 
-                            <blockquote className="mt-4 max-w-md text-lg font-light leading-snug sm:text-xl">
+                            <blockquote className="mt-4 max-w-md text-lg font-light leading-snug sm:text-2xl">
                                 &ldquo;{t.quote}&rdquo;
                             </blockquote>
 
                             <span
                                 aria-hidden
-                                className="mt-5 h-px w-48 bg-linear-to-r from-transparent via-white/40 to-transparent"
+                                className="mt-3 h-0.5 w-100 bg-linear-to-r from-transparent via-white/40 to-transparent"
                             />
-                            <figcaption className="mt-3 text-xs text-white/80">
+                            <figcaption className="mt-3 text-base text-white/80">
                                 {t.name}
                             </figcaption>
                         </figure>
@@ -117,7 +117,7 @@ export default function Testimonials() {
                 <div
                     role="tablist"
                     aria-label="Choose a testimonial"
-                    className="mt-8 flex items-center justify-center gap-1.5"
+                    className="flex items-center justify-center gap-1.5"
                 >
                     {TESTIMONIALS.map((t, i) => (
                         <button
@@ -127,9 +127,9 @@ export default function Testimonials() {
                             aria-selected={active === i}
                             aria-label={`Testimonial from ${t.name}`}
                             onClick={() => setActive(i)}
-                            className={`h-1 rounded-full outline-none transition-[width,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-[#E8E39A]/70 motion-reduce:transition-none ${EASE} ${active === i
+                            className={`h-2 rounded-full outline-none transition-[width,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-[#E8E39A]/70 motion-reduce:transition-none ${EASE} ${active === i
                                 ? "w-6 bg-white"
-                                : "w-1 bg-white/40 hover:bg-white/70"
+                                : "w-2 bg-white/40 hover:bg-white/70"
                                 }`}
                         />
                     ))}
@@ -144,14 +144,14 @@ function Stars() {
         <span
             role="img"
             aria-label="5 out of 5 stars"
-            className="mt-4 flex gap-1 text-[#F5A511]"
+            className="mt-3 flex gap-1 text-[#F5A511]"
         >
             {[0, 1, 2, 3, 4].map((n) => (
                 <svg
                     key={n}
                     aria-hidden
                     viewBox="0 0 24 24"
-                    className="h-4 w-4"
+                    className="h-5 w-5"
                     fill="currentColor"
                 >
                     <path d="m12 2 2.900 6.300 6.900.8-5.100 4.700 1.400 6.800L12 17.200 5.900 20.600l1.400-6.800L2.200 9.100l6.900-.8L12 2Z" />
