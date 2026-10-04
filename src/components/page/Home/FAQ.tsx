@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import gsap from "gsap";
 
 const FAQS = [
     {
@@ -54,23 +55,25 @@ export default function Faq() {
                         return (
                             <li
                                 key={item.id}
-                                className={`overflow-hidden rounded-md transition-shadow duration-700 ${EASE} ${isOpen ? "shadow-lg shadow-black/5" : ""
+                                className={`overflow-hidden rounded-md transition-shadow duration-700 ${EASE} ${isOpen
+                                        ? "shadow-lg shadow-black/5"
+                                        : ""
                                     }`}
                                 style={
                                     isOpen
                                         ? {
                                             background: `
-                                  radial-gradient(
-                                      ellipse 40% 100% at 50% 100%,
-                                      #E7EAD2 0%,
-                                      transparent 100%
-                                  ),
-                                  linear-gradient(
-                                      to right,
-                                      #E5CB83,
-                                      #9BC17C
-                                  )
-                              `,
+                                                radial-gradient(
+                                                    ellipse 40% 100% at 50% 100%,
+                                                    #E7EAD2 0%,
+                                                    transparent 100%
+                                                ),
+                                                linear-gradient(
+                                                    to right,
+                                                    #E5CB83,
+                                                    #9BC17C
+                                                )
+                                            `,
                                         }
                                         : {
                                             background: "#FFFEF4",
@@ -84,7 +87,9 @@ export default function Faq() {
                                         aria-expanded={isOpen}
                                         aria-controls={`faq-panel-${item.id}`}
                                         onClick={() =>
-                                            setOpen(isOpen ? null : item.id)
+                                            setOpen(
+                                                isOpen ? null : item.id
+                                            )
                                         }
                                         className="relative flex w-full items-center justify-between gap-4 pt-1 pb-2 pl-4 pr-1 text-left text-base font-bold text-[#1C1B17] outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#5C4B36] sm:text-lg"
                                     >
@@ -102,33 +107,33 @@ export default function Faq() {
                                                 isOpen
                                                     ? {
                                                         background: `
-                                              radial-gradient(
-                                                  circle at 0% 0%,
-                                                  #FC9E06 0%,
-                                                  transparent 55%
-                                              ),
-                                              radial-gradient(
-                                                  circle at 0% 100%,
-                                                  #FDAC26 0%,
-                                                  transparent 55%
-                                              ),
-                                              radial-gradient(
-                                                  circle at 100% 0%,
-                                                  #FFF7DF 0%,
-                                                  transparent 55%
-                                              ),
-                                              radial-gradient(
-                                                  circle at 100% 100%,
-                                                  #FEC668 0%,
-                                                  transparent 55%
-                                              ),
-                                              #F4D489
-                                          `,
+                                                            radial-gradient(
+                                                                circle at 0% 0%,
+                                                                #FC9E06 0%,
+                                                                transparent 55%
+                                                            ),
+                                                            radial-gradient(
+                                                                circle at 0% 100%,
+                                                                #FDAC26 0%,
+                                                                transparent 55%
+                                                            ),
+                                                            radial-gradient(
+                                                                circle at 100% 0%,
+                                                                #FFF7DF 0%,
+                                                                transparent 55%
+                                                            ),
+                                                            radial-gradient(
+                                                                circle at 100% 100%,
+                                                                #FEC668 0%,
+                                                                transparent 55%
+                                                            ),
+                                                            #F4D489
+                                                        `,
                                                     }
                                                     : undefined
                                             }
                                         >
-                                            {isOpen ? <EyeOpen /> : <EyeClosed />}
+                                            <EyeIcon isOpen={isOpen} />
                                         </span>
                                     </button>
                                 </h3>
@@ -154,37 +159,156 @@ export default function Faq() {
                         );
                     })}
                 </ul>
-
             </div>
         </section>
     );
 }
 
-const ICON = {
-    "aria-hidden": true,
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 1.6,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
-    className: "h-7 w-7",
-} as const;
+/* Eye transition */
 
-function EyeOpen() {
+function EyeIcon({ isOpen }: { isOpen: boolean }) {
+    const openEyeRef = useRef<HTMLSpanElement>(null);
+    const closedEyeRef = useRef<HTMLSpanElement>(null);
+    const firstRender = useRef(true);
+
+    useEffect(() => {
+        if (!openEyeRef.current || !closedEyeRef.current) return;
+
+        const openEye = openEyeRef.current;
+        const closedEye = closedEyeRef.current;
+
+        if (firstRender.current) {
+            firstRender.current = false;
+
+            gsap.set(openEye, {
+                opacity: isOpen ? 1 : 0,
+                scaleY: 1,
+            });
+
+            gsap.set(closedEye, {
+                opacity: isOpen ? 0 : 1,
+                scaleY: 1,
+            });
+
+            return;
+        }
+
+        const ctx = gsap.context(() => {
+           
+            gsap.killTweensOf([openEye, closedEye]);
+
+            const tl = gsap.timeline();
+
+            if (isOpen) {
+                
+                tl.to(closedEye, {
+                    scaleY: 0.08,
+                    duration: 0.1,
+                    ease: "power2.in",
+                })
+                    .set(closedEye, {
+                        opacity: 0,
+                    })
+                    .set(openEye, {
+                        opacity: 1,
+                        scaleY: 0.08,
+                    })
+                    .to(openEye, {
+                        scaleY: 1,
+                        duration: 0.18,
+                        ease: "power2.out",
+                    });
+            } else {
+                
+                tl.to(openEye, {
+                    scaleY: 0.08,
+                    duration: 0.12,
+                    ease: "power2.in",
+                })
+                    .set(openEye, {
+                        opacity: 0,
+                    })
+                    .set(closedEye, {
+                        opacity: 1,
+                        scaleY: 1,
+                    });
+            }
+        });
+
+        return () => {
+            ctx.revert();
+        };
+    }, [isOpen]);
+
     return (
-        <svg {...ICON}>
-            <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
-            <circle cx="12" cy="12" r="3" />
+        <span className="relative grid h-7 w-7 place-items-center">
+            {/* Open eye */}
+            <span
+                ref={openEyeRef}
+                className="absolute inset-0 grid place-items-center"
+            >
+                <EyeOpenIcon className="h-7 w-7" />
+            </span>
+
+            {/* Closed eye */}
+            <span
+                ref={closedEyeRef}
+                className="absolute inset-0 grid place-items-center"
+            >
+                <EyeClosedIcon className="h-7 w-7" />
+            </span>
+        </span>
+    );
+}
+
+/* Eye Open */
+
+function EyeOpenIcon({ className }: { className?: string }) {
+    return (
+        <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            className={className}
+        >
+            <path
+                d="M3 12c5.4-8 12.6-8 18 0-5.4 8-12.6 8-18 0z"
+                stroke="currentColor"
+                strokeLinejoin="round"
+                strokeWidth="2"
+            />
+
+            <path
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                stroke="currentColor"
+                strokeLinejoin="round"
+                strokeWidth="2"
+            />
         </svg>
     );
 }
 
-function EyeClosed() {
+/* Eye Closed */
+
+function EyeClosedIcon({ className }: { className?: string }) {
     return (
-        <svg {...ICON}>
-            <path d="M4 10c2.500 3 5 4.500 8 4.500s5.500-1.500 8-4.500" />
-            <path d="m7 14-1 2.500M12 15.500V18M17 14l1 2.500" />
+        <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={className}
+        >
+            <path
+                d="M21.0006 12.0007C19.2536 15.5766 15.8779 18 12 18M12 18C8.12204 18 4.7463 15.5766 2.99977 12.0002M12 18L12 21M19.4218 14.4218L21.4999 16.5M16.2304 16.9687L17.5 19.5M4.57812 14.4218L2.5 16.5M7.76953 16.9687L6.5 19.5"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
         </svg>
     );
 }

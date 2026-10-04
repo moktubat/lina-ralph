@@ -3,75 +3,161 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-// Angle (deg) of each card on the arc. 0° is the fixed before/after card.
-const ARC = [
+const IMAGES = [
     {
-        angle: -66,
-        image: "/image/energy-01.webp",
-        alt: "Woman lying on the floor with a singing bowl beside her",
+        afterImage: "/image/energy-after-01.webp",
+        beforeImage: "/image/energy-before-01.webp",
+        altAfter: "Woman lying on the floor with a singing bowl beside her - calm state",
+        altBefore: "Woman lying on the floor with a singing bowl beside her - tense state",
     },
     {
-        angle: -44,
-        image: "/image/energy-02.webp",
-        alt: "Woman resting on a cushion while a therapist holds a hand above her",
+        afterImage: "/image/energy-after-02.webp",
+        beforeImage: "/image/energy-before-02.webp",
+        altAfter: "Woman resting on a cushion while a therapist holds a hand above her - relaxed",
+        altBefore: "Woman resting on a cushion while a therapist holds a hand above her - stressed",
     },
     {
-        angle: -22,
-        image: "/image/energy-03.webp",
-        alt: "Woman with closed eyes relaxing in a calm room",
+        afterImage: "/image/energy-after-03.webp",
+        beforeImage: "/image/energy-before-03.webp",
+        altAfter: "Woman with closed eyes relaxing in a calm room - peaceful",
+        altBefore: "Woman with closed eyes relaxing in a calm room - anxious",
     },
     {
-        angle: 22,
-        image: "/image/energy-04.webp",
-        alt: "Woman seated cross-legged looking tense while a therapist stands behind her",
+        afterImage: "/image/energy-after-04.webp",
+        beforeImage: "/image/energy-before-04.webp",
+        altAfter: "Woman seated cross-legged looking calm while a therapist stands behind her",
+        altBefore: "Woman seated cross-legged looking tense while a therapist stands behind her",
     },
     {
-        angle: 44,
-        image: "/image/energy-05.webp",
-        alt: "Woman sitting cross-legged in a bright room, hands resting on her knees",
+        afterImage: "/image/energy-after-05.webp",
+        beforeImage: "/image/energy-before-05.webp",
+        altAfter: "Woman sitting cross-legged in a bright room, hands resting on her knees - at ease",
+        altBefore: "Woman sitting cross-legged in a bright room, hands resting on her knees - uncomfortable",
     },
     {
-        angle: 66,
-        image: "/image/energy-06.webp",
-        alt: "Woman sitting on a woven cushion, eyes closed",
+        afterImage: "/image/energy-after-06.webp",
+        beforeImage: "/image/energy-before-06.webp",
+        altAfter: "Woman sitting on a woven cushion, eyes closed - serene",
+        altBefore: "Woman sitting on a woven cushion, eyes closed - troubled",
     },
 ];
 
-const CARD_SIZE = "h-40 w-30 sm:h-52 sm:w-40 lg:h-64 lg:w-50";
+// Cards are spread evenly over the FULL circle so the infinite loop has no gaps.
+const CARD_COUNT = 12; // 12 cards -> 30° step. Images repeat (index % 6).
+const STEP = 360 / CARD_COUNT;
+const CARDS = Array.from({ length: CARD_COUNT }, (_, i) => ({
+    id: i,
+    angle: i * STEP,
+    ...IMAGES[i % IMAGES.length],
+}));
+
+const CARD_SIZE = "h-60 w-44 sm:h-80 sm:w-56 lg:h-90 lg:w-67"; // lg = 360px x 268px
+const ROTATION_DURATION = 80; // seconds per full turn
+
+const getRadius = () =>
+    Math.min(Math.max(window.innerWidth * 0.62, 520), 900);
+
+/**
+ * Clip a w×h rect (card-local coords, origin = card centre) against the half-plane
+ * f(p) = cosφ·x − sinφ·y + cx < 0  (i.e. the part of the card left of the divider).
+ * Returns a CSS clip-path polygon string.
+ */
+function getClipPath(phi: number, cx: number, w: number, h: number): string {
+    const cos = Math.cos(phi);
+    const sin = Math.sin(phi);
+    const f = (x: number, y: number) => cos * x - sin * y + cx;
+
+    const hw = w / 2;
+    const hh = h / 2;
+    const rect: [number, number][] = [
+        [-hw, -hh],
+        [hw, -hh],
+        [hw, hh],
+        [-hw, hh],
+    ];
+
+    const out: [number, number][] = [];
+    for (let i = 0; i < rect.length; i++) {
+        const a = rect[i];
+        const b = rect[(i + 1) % rect.length];
+        const fa = f(a[0], a[1]);
+        const fb = f(b[0], b[1]);
+
+        if (fa < 0) out.push(a);
+        if (fa < 0 !== fb < 0) {
+            const t = fa / (fa - fb);
+            out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]);
+        }
+    }
+
+    if (out.length < 3) return "inset(0 100% 0 0)"; // fully on the "before" side
+    return `polygon(${out
+        .map(([x, y]) => `${(x + hw).toFixed(2)}px ${(y + hh).toFixed(2)}px`)
+        .join(", ")})`;
+}
 
 export default function Transformation() {
     const sectionRef = useRef<HTMLElement>(null);
+    const galleryRef = useRef<HTMLDivElement>(null);
     const ringRef = useRef<HTMLDivElement>(null);
+    const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const afterRefs = useRef<(HTMLDivElement | null)[]>([]);
 
     useEffect(() => {
-        gsap.registerPlugin(ScrollTrigger);
+        const gallery = galleryRef.current;
+        const ring = ringRef.current;
+        if (!gallery || !ring) return;
+
+        const state = { rotation: 0, radius: getRadius() };
+
+        const update = () => {
+            const { rotation, radius } = state;
+            for (let i = 0; i < CARDS.length; i++) {
+                const card = cardRefs.current[i];
+                const after = afterRefs.current[i];
+                if (!card || !after) continue;
+
+                const phi = ((CARDS[i].angle + rotation) * Math.PI) / 180;
+                // card centre x relative to the divider (ring centre)
+                const cx = radius * Math.sin(phi);
+                after.style.clipPath = getClipPath(
+                    phi,
+                    cx,
+                    card.offsetWidth,
+                    card.offsetHeight,
+                );
+            }
+        };
+
+        const applyRadius = () => {
+            state.radius = getRadius();
+            gallery.style.setProperty("--r", `${state.radius}px`);
+            update();
+        };
+
+        applyRadius();
+        window.addEventListener("resize", applyRadius);
 
         const mm = gsap.matchMedia();
         mm.add("(prefers-reduced-motion: no-preference)", () => {
-            const tween = gsap.fromTo(
-                ringRef.current,
-                { rotation: -7 },
-                {
-                    rotation: 7,
-                    ease: "none",
-                    scrollTrigger: {
-                        trigger: sectionRef.current,
-                        start: "top bottom",
-                        end: "bottom top",
-                        scrub: true,
-                    },
+            const tween = gsap.to(state, {
+                rotation: -360,
+                duration: ROTATION_DURATION,
+                ease: "none",
+                repeat: -1,
+                onUpdate: () => {
+                    gsap.set(ring, { rotation: state.rotation });
+                    update();
                 },
-            );
-
-            return () => {
-                tween.scrollTrigger?.kill();
-                tween.kill();
-            };
+            });
+            return () => tween.kill();
         });
 
-        return () => mm.revert();
+        return () => {
+            window.removeEventListener("resize", applyRadius);
+            mm.revert();
+        };
     }, []);
 
     return (
@@ -94,17 +180,18 @@ export default function Transformation() {
 
             {/* Arc gallery */}
             <div
-                className="relative -mt-4 h-112 overflow-hidden sm:h-136 lg:h-152"
-                style={{ ["--r" as string]: "clamp(460px, 56vw, 820px)" }}
+                ref={galleryRef}
+                className="relative -mt-4 h-136 overflow-hidden sm:h-152 lg:h-176"
+                style={{ ["--r" as string]: "700px" }}
             >
-                {/* light on the "after" side, shade on the "before" side */}
                 <div
                     aria-hidden
-                    className="absolute inset-y-0 left-0 right-1/2 bg-linear-to-r from-transparent to-[#E8E39A]/15"
+                    className="absolute inset-y-0 left-0 top-0 h-[450px] w-1/2 bg-gradient-to-r from-transparent to-[#E8E39A]/15"
                 />
+
                 <div
                     aria-hidden
-                    className="absolute inset-y-0 left-1/2 right-0 bg-black/15"
+                    className="absolute inset-y-0 right-0 top-0 h-[450px] w-1/2 bg-gradient-to-l from-transparent to-black/15"
                 />
 
                 <span className="absolute left-4 top-2 z-30 text-xl sm:left-20">
@@ -114,27 +201,49 @@ export default function Transformation() {
                     Before
                 </span>
 
-                {/* Rotating ring: zero-size pivot placed at the circle's centre */}
+                {/* Rotating ring: zero-size pivot at the circle's centre */}
                 <div
                     ref={ringRef}
-                    className="absolute left-1/2 z-10 h-0 w-0"
-                    style={{ top: "calc(var(--r) + 8rem)" }}
+                    className="absolute left-1/2 z-10 h-0 w-0 will-change-transform"
+                    style={{ top: "calc(var(--r) + 12rem)" }}
                 >
-                    {ARC.map((card) => (
+                    {CARDS.map((card, index) => (
                         <div
-                            key={card.image}
+                            key={card.id}
+                            ref={(el) => {
+                                cardRefs.current[index] = el;
+                            }}
                             className={`absolute left-0 top-0 origin-top-left overflow-hidden rounded-2xl bg-black/20 shadow-2xl shadow-black/30 ${CARD_SIZE}`}
                             style={{
                                 transform: `rotate(${card.angle}deg) translateY(calc(var(--r) * -1)) translate(-50%, -50%)`,
                             }}
                         >
+                            {/* Before (base layer) */}
                             <Image
-                                src={card.image}
-                                alt={card.alt}
+                                src={card.beforeImage}
+                                alt={card.altBefore}
                                 fill
-                                sizes="(min-width: 1024px) 200px, (min-width: 640px) 160px, 120px"
+                                loading="eager"
+                                sizes="(min-width: 1024px) 268px, (min-width: 640px) 224px, 176px"
                                 className="object-cover"
                             />
+                            {/* After (overlay, clipped by wrapper) */}
+                            <div
+                                ref={(el) => {
+                                    afterRefs.current[index] = el;
+                                }}
+                                className="absolute inset-0"
+                                style={{ clipPath: "inset(0 100% 0 0)" }}
+                            >
+                                <Image
+                                    src={card.afterImage}
+                                    alt={card.altAfter}
+                                    fill
+                                    loading="eager"
+                                    sizes="(min-width: 1024px) 268px, (min-width: 640px) 224px, 176px"
+                                    className="object-cover"
+                                />
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -142,34 +251,21 @@ export default function Transformation() {
                 {/* Divider line */}
                 <div
                     aria-hidden
-                    className="absolute inset-y-0 left-1/2 z-20 w-px bg-linear-to-b from-transparent via-[#E8B84A] to-transparent z-40"
+                    className="absolute inset-y-0 left-1/2 z-20 w-px -translate-x-1/2 bg-linear-to-b from-transparent via-[#E8B84A] to-transparent"
                 />
-
-                {/* Centre card: after (left half) / before (right half) */}
-                <div
-                    className={`absolute left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl shadow-2xl shadow-black/40 ${CARD_SIZE}`}
-                    style={{ top: "8rem" }}
-                >
-                    <Image
-                        src="/image/energy-before.webp"
-                        alt="Client looking tense and holding her breath during a session"
-                        fill
-                        sizes="(min-width: 1024px) 200px, (min-width: 640px) 160px, 120px"
-                        className="object-cover"
-                    />
-                    <Image
-                        src="/image/energy-after.webp"
-                        alt="The same client looking calm and at ease"
-                        fill
-                        sizes="(min-width: 1024px) 200px, (min-width: 640px) 160px, 120px"
-                        className="object-cover [clip-path:inset(0_50%_0_0)]"
-                    />
-                </div>
             </div>
 
             {/* Closing statement */}
             <div className="relative z-10 -mt-6 flex flex-col items-center px-4 text-center sm:-mt-60">
-                <CompassIcon className="h-14 w-14 sm:h-32 sm:w-32" />
+                <div className="flex h-20 w-20 items-center justify-center sm:h-32 sm:w-32">
+                    <Image
+                        src="/svg/compass.svg"
+                        alt=""
+                        width={80}
+                        height={80}
+                        className="object-contain"
+                    />
+                </div>
 
                 <p className="mt-4 max-w-2xl font-serif text-base italic leading-snug tracking-tight sm:text-2xl">
                     The goal isn&apos;t to become someone else.
@@ -179,39 +275,5 @@ export default function Transformation() {
                 </p>
             </div>
         </section>
-    );
-}
-
-function CompassIcon({ className = "" }: { className?: string }) {
-    return (
-        <svg
-            aria-hidden
-            viewBox="0 0 64 64"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            <defs>
-                <linearGradient id="compass-arrows" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0" stopColor="#7DBB8A" />
-                    <stop offset="1" stopColor="#F5B63A" />
-                </linearGradient>
-            </defs>
-            <circle cx="32" cy="30" r="17" stroke="#fff" strokeWidth="1.5" />
-            <circle cx="32" cy="30" r="11" stroke="#fff" strokeWidth="1.2" />
-            <path
-                d="M21 30c3-5 6.500-7.500 11-7.500S40 25 43 30c-3 5-6.500 7.500-11 7.500S24 35 21 30Z"
-                stroke="#fff"
-                strokeWidth="1.2"
-            />
-            <circle cx="32" cy="30" r="3" stroke="#fff" strokeWidth="1.2" />
-            <path d="M32 8V4M28 5h8" stroke="#fff" strokeWidth="1.5" />
-            <path
-                d="M20 54c7 3.500 17 3.500 24 0M40 51.500l4 2.500-4.500 1.500M24 51.500 20 54l4.500 1.500"
-                stroke="url(#compass-arrows)"
-                strokeWidth="1.6"
-            />
-        </svg>
     );
 }

@@ -227,7 +227,7 @@ function MarqueeGroup({ ariaHidden = false }: { ariaHidden?: boolean }) {
         >
             {[0, 1].map((n) => (
                 <div key={n} className="flex shrink-0 items-center">
-                    <span className="whitespace-nowrap font-serif text-xl tracking-tight text-[#1C1B17] sm:text-2xl lg:text-4xl">
+                    <span className="whitespace-nowrap font-serif text-xl tracking-tight text-[#3B3C39] sm:text-2xl lg:text-4xl">
                         You are not broken. You may simply be working at the
                         wrong level.
                     </span>
@@ -243,7 +243,7 @@ function StarIcon() {
         <svg
             aria-hidden
             viewBox="0 0 24 24"
-            className="mx-4 h-6 w-6 shrink-0 text-[#1C1B17] sm:mx-7 sm:h-8 sm:w-8 lg:mx-10 lg:h-9 lg:w-9"
+            className="mx-4 h-6 w-6 shrink-0 text-[#3B3C39] sm:mx-7 sm:h-8 sm:w-8 lg:mx-10 lg:h-9 lg:w-9"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.4"

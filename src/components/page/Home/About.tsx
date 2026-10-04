@@ -22,8 +22,16 @@ export default function About() {
                 </div>
 
                 {/* Right */}
-                <div className="flex w-full max-w-[405px] flex-col justify-end gap-5 md:col-span-1 md:col-start-2 md:row-start-2 lg:col-span-1 lg:col-start-3 lg:row-start-1">
-                    <SpiralHeadIcon className="h-32 w-32" />
+                <div className="flex w-full max-w-[405px] flex-col justify-end gap-10 md:col-span-1 md:col-start-2 md:row-start-2 lg:col-span-1 lg:col-start-3 lg:row-start-1">
+                    <div className="flex h-24 w-24 items-center justify-center">
+                        <Image
+                            src="/svg/spiral-head.svg"
+                            alt=""
+                            width={96}
+                            height={96}
+                            className="object-contain"
+                        />
+                    </div>
 
                     <p className="text-sm leading-relaxed text-[#1C1B17]/80 sm:text-base">
                         Lina is a hypnotherapist who brings presence, clarity,
@@ -35,37 +43,5 @@ export default function About() {
                 </div>
             </div>
         </section>
-    );
-}
-
-function SpiralHeadIcon({ className = "" }: { className?: string }) {
-    return (
-        <svg
-            aria-hidden
-            viewBox="0 0 64 64"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            <defs>
-                <linearGradient id="about-spiral" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor="#F5B63A" />
-                    <stop offset="1" stopColor="#7DBB8A" />
-                </linearGradient>
-            </defs>
-
-            <path
-                d="M18 58V44c-5-4-8-10-8-17C10 15 19 6 30 6s19 8 19 17l4 8-4 2v5l-2 3h-6v10"
-                stroke="#1C1B17"
-                strokeWidth="1.5"
-            />
-
-            <path
-                d="M30 34c-5.500 0-9-3.500-9-8s3.500-8.500 9-8.500S39 21 39 25s-3 6.500-7 6.500-6-2-6-5 2-4.500 5-4.500"
-                stroke="url(#about-spiral)"
-                strokeWidth="2.4"
-            />
-        </svg>
     );
 }

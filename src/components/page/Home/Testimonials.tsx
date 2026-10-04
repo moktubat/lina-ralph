@@ -37,22 +37,30 @@ const TESTIMONIALS = [
 ];
 
 const EASE = "ease-[cubic-bezier(.22,1,.36,1)]";
-const INTERVAL = 6000;
+const INTERVAL = 5000;
+
+const REVEAL =
+    `transition-[opacity,transform,filter] duration-700 motion-reduce:transition-none ${EASE} ` +
+    "opacity-0 translate-y-5 blur-sm " +
+    "group-data-[active=true]:opacity-100 group-data-[active=true]:translate-y-0 group-data-[active=true]:blur-none " +
+    "group-data-[active=true]:duration-1200 group-data-[active=true]:delay-(--d)";
+
+const d = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;
 
 export default function Testimonials() {
     const [active, setActive] = useState(0);
-    const [paused, setPaused] = useState(false);
 
     useEffect(() => {
-        if (paused) return;
-        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+        }
 
-        const t = setTimeout(
-            () => setActive((i) => (i + 1) % TESTIMONIALS.length),
-            INTERVAL,
-        );
-        return () => clearTimeout(t);
-    }, [active, paused]);
+        const interval = setInterval(() => {
+            setActive((i) => (i + 1) % TESTIMONIALS.length);
+        }, INTERVAL);
+
+        return () => clearInterval(interval);
+    }, []);
 
     return (
         <section
@@ -64,10 +72,6 @@ export default function Testimonials() {
                     linear-gradient(to bottom, #2E3C20 0%, #2E3C20 60%, #334123 100%)
                 `,
             }}
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-            onFocusCapture={() => setPaused(true)}
-            onBlurCapture={() => setPaused(false)}
         >
             <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:py-20 lg:py-24">
                 <h2 className="mx-auto max-w-xl text-center font-serif text-3xl italic leading-[1.1] tracking-tight sm:text-4xl md:text-5xl">
@@ -81,13 +85,14 @@ export default function Testimonials() {
                     {TESTIMONIALS.map((t, i) => (
                         <figure
                             key={t.id}
+                            data-active={active === i}
                             aria-hidden={active !== i}
-                            className={`col-start-1 row-start-1 flex flex-col items-center text-center transition-[opacity,transform] duration-700 motion-reduce:transition-none ${EASE} ${active === i
-                                ? "translate-y-0 opacity-100"
-                                : "pointer-events-none translate-y-2 opacity-0"
-                                }`}
+                            className="group col-start-1 row-start-1 flex flex-col items-center text-center data-[active=false]:pointer-events-none"
                         >
-                            <span className="relative h-16 w-16 overflow-hidden rounded-full border border-white/70">
+                            <span
+                                style={d(0)}
+                                className={`relative h-16 w-16 scale-90 overflow-hidden rounded-full border border-white/70 group-data-[active=true]:scale-100 ${REVEAL}`}
+                            >
                                 <Image
                                     src={t.avatar}
                                     alt=""
@@ -97,17 +102,25 @@ export default function Testimonials() {
                                 />
                             </span>
 
-                            <Stars />
+                            <Stars style={d(120)} />
 
-                            <blockquote className="mt-4 max-w-md text-lg font-light leading-snug sm:text-2xl">
+                            <blockquote
+                                style={d(240)}
+                                className={`mt-4 max-w-md text-lg font-light leading-snug sm:text-2xl ${REVEAL}`}
+                            >
                                 &ldquo;{t.quote}&rdquo;
                             </blockquote>
 
                             <span
                                 aria-hidden
-                                className="mt-3 h-0.5 w-100 bg-linear-to-r from-transparent via-white/40 to-transparent"
+                                style={d(400)}
+                                className={`mt-3 h-0.5 w-100 scale-x-0 bg-linear-to-r from-transparent via-white/40 to-transparent group-data-[active=true]:scale-x-100 ${REVEAL}`}
                             />
-                            <figcaption className="mt-3 text-base text-white/80">
+
+                            <figcaption
+                                style={d(520)}
+                                className={`mt-3 text-base text-white/80 ${REVEAL}`}
+                            >
                                 {t.name}
                             </figcaption>
                         </figure>
@@ -128,8 +141,8 @@ export default function Testimonials() {
                             aria-label={`Testimonial from ${t.name}`}
                             onClick={() => setActive(i)}
                             className={`h-2 rounded-full outline-none transition-[width,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-[#E8E39A]/70 motion-reduce:transition-none ${EASE} ${active === i
-                                ? "w-6 bg-white"
-                                : "w-2 bg-white/40 hover:bg-white/70"
+                                    ? "w-6 bg-white"
+                                    : "w-2 bg-white/40 hover:bg-white/70"
                                 }`}
                         />
                     ))}
@@ -139,12 +152,13 @@ export default function Testimonials() {
     );
 }
 
-function Stars() {
+function Stars({ style }: { style: React.CSSProperties }) {
     return (
         <span
             role="img"
             aria-label="5 out of 5 stars"
-            className="mt-3 flex gap-1 text-[#F5A511]"
+            style={style}
+            className={`mt-3 flex gap-1 text-[#F5A511] ${REVEAL}`}
         >
             {[0, 1, 2, 3, 4].map((n) => (
                 <svg

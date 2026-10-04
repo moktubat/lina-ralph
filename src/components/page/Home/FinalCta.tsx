@@ -36,9 +36,16 @@ export default function FinalCta() {
                     />
                 </div>
 
-
                 <div className="relative flex max-w-lg flex-col items-center">
-                    <PendulumRings className="h-14 w-14 sm:h-16 sm:w-16" />
+                    <div className="flex h-34 w-34 items-center justify-center">
+                        <Image
+                            src="/svg/pendulum-rings.svg"
+                            alt=""
+                            width={136}
+                            height={136}
+                            className="object-contain"
+                        />
+                    </div>
 
                     <h2 className="mt-5 font-serif text-3xl italic leading-[1.1] tracking-tight sm:text-4xl md:text-5xl">
                         You don&apos;t have to keep fighting the same pattern.
@@ -60,34 +67,5 @@ export default function FinalCta() {
                 </div>
             </div>
         </section>
-    );
-}
-
-function PendulumRings({ className = "" }: { className?: string }) {
-    return (
-        <svg
-            aria-hidden
-            viewBox="0 0 64 64"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            <defs>
-                <linearGradient id="cta-rings" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0" stopColor="#7DBB8A" />
-                    <stop offset="1" stopColor="#F5B63A" />
-                </linearGradient>
-            </defs>
-            <path
-                d="M30 30a14 14 0 0 1 0 24M36 31a14 14 0 0 1 0 22M42 33a14 14 0 0 1 0 18"
-                stroke="url(#cta-rings)"
-                strokeWidth="1.6"
-            />
-            <circle cx="22" cy="42" r="14" stroke="#fff" strokeWidth="1.5" />
-            <circle cx="22" cy="42" r="2" stroke="#fff" strokeWidth="1.2" />
-            <path d="M31 32 46 15" stroke="#fff" strokeWidth="1.5" />
-            <circle cx="50" cy="11" r="5" stroke="#fff" strokeWidth="1.5" />
-        </svg>
     );
 }
