@@ -18,8 +18,9 @@ export default function Button({
     className = "",
     ...props
 }: ButtonProps) {
+
     const base =
-        "inline-flex items-center gap-3 rounded-md text-sm sm:text-sm py-1";
+        "inline-flex w-full sm:w-auto items-center justify-center gap-3 rounded-md text-sm sm:text-sm py-1";
 
     const styles = {
         primary:

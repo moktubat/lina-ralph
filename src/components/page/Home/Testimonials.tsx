@@ -73,21 +73,21 @@ export default function Testimonials() {
                 `,
             }}
         >
-            <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:py-20 lg:py-24">
-                <h2 className="mx-auto max-w-xl text-center font-serif text-3xl italic leading-[1.1] tracking-tight sm:text-4xl md:text-5xl">
+            <div className="mx-auto w-full max-w-7xl px-5 py-16 sm:px-4 sm:py-20 lg:py-24">
+                <h2 className="mx-auto max-w-xl text-center font-serif text-3xl italic leading-[1.1] tracking-tight text-balance sm:text-4xl md:text-5xl">
                     Don&apos;t just take Lina&apos;s word for it.
                 </h2>
 
                 <div
                     aria-live="polite"
-                    className="mx-auto mt-10 grid max-w-xl sm:mt-12"
+                    className="mx-auto mt-10 grid max-w-xl grid-cols-[minmax(0,1fr)] sm:mt-12"
                 >
                     {TESTIMONIALS.map((t, i) => (
                         <figure
                             key={t.id}
                             data-active={active === i}
                             aria-hidden={active !== i}
-                            className="group col-start-1 row-start-1 flex flex-col items-center text-center data-[active=false]:pointer-events-none"
+                            className="group col-start-1 row-start-1 flex min-w-0 flex-col items-center text-center data-[active=false]:pointer-events-none"
                         >
                             <span
                                 style={d(0)}
@@ -97,7 +97,7 @@ export default function Testimonials() {
                                     src={t.avatar}
                                     alt=""
                                     fill
-                                    sizes="48px"
+                                    sizes="64px"
                                     className="object-cover"
                                 />
                             </span>
@@ -106,7 +106,7 @@ export default function Testimonials() {
 
                             <blockquote
                                 style={d(240)}
-                                className={`mt-4 max-w-md text-lg font-light leading-snug sm:text-2xl ${REVEAL}`}
+                                className={`mt-4 w-full max-w-md text-balance wrap-break-word text-xl font-light leading-snug sm:text-2xl ${REVEAL}`}
                             >
                                 &ldquo;{t.quote}&rdquo;
                             </blockquote>
@@ -114,7 +114,7 @@ export default function Testimonials() {
                             <span
                                 aria-hidden
                                 style={d(400)}
-                                className={`mt-3 h-0.5 w-100 scale-x-0 bg-linear-to-r from-transparent via-white/40 to-transparent group-data-[active=true]:scale-x-100 ${REVEAL}`}
+                                className={`mt-3 h-0.5 w-full max-w-xs scale-x-0 bg-linear-to-r from-transparent via-white/40 to-transparent group-data-[active=true]:scale-x-100 sm:max-w-sm ${REVEAL}`}
                             />
 
                             <figcaption
@@ -130,7 +130,7 @@ export default function Testimonials() {
                 <div
                     role="tablist"
                     aria-label="Choose a testimonial"
-                    className="mt-2 flex items-center justify-center gap-1.5"
+                    className="mt-4 flex items-center justify-center gap-1.5"
                 >
                     {TESTIMONIALS.map((t, i) => (
                         <button
@@ -141,8 +141,8 @@ export default function Testimonials() {
                             aria-label={`Testimonial from ${t.name}`}
                             onClick={() => setActive(i)}
                             className={`h-2 rounded-full outline-none transition-[width,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-[#E8E39A]/70 motion-reduce:transition-none ${EASE} ${active === i
-                                    ? "w-6 bg-white"
-                                    : "w-2 bg-white/40 hover:bg-white/70"
+                                ? "w-6 bg-white"
+                                : "w-2 bg-white/40 hover:bg-white/70"
                                 }`}
                         />
                     ))}

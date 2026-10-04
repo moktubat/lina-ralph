@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, ReactNode } from "react";
+import { useAnchorScroll } from "@/components/providers/SmoothScrollProvider";
 
 const MENU = [
     { label: "Home", href: "/" },
@@ -12,7 +13,7 @@ const MENU = [
 ];
 
 const SOCIAL = [
-    { label: "x", href: "#" },
+    { label: "X", href: "#" },
     { label: "Facebook", href: "#" },
     { label: "Instagram", href: "#" },
     { label: "LinkedIn", href: "#" },
@@ -26,13 +27,14 @@ const LEGAL = [
 ];
 
 export default function Footer() {
+    const scrollToAnchor = useAnchorScroll();
     // TODO: connect to your newsletter provider.
     function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
     }
 
     return (
-        <footer className="w-full bg-[#2E3C20] text-[#F4F2EE] mt-16">
+        <footer className="mt-16 w-full overflow-clip bg-[#2E3C20] text-[#F4F2EE]">
             <div className="mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 lg:pt-16">
                 {/* Wordmark + contact */}
                 <div className="grid gap-12 pb-12 lg:grid-cols-[1.4fr_1fr] lg:pb-14">
@@ -60,7 +62,7 @@ export default function Footer() {
                             <ContactItem icon={<MailIcon />}>
                                 <a
                                     href="mailto:lina@therapish.com"
-                                    className="hover:underline"
+                                    className="break-all hover:underline"
                                 >
                                     lina@therapish.com
                                 </a>
@@ -83,7 +85,7 @@ export default function Footer() {
                 <Divider />
 
                 {/* Link columns */}
-                <div className="grid gap-10 py-10 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-10 lg:grid-cols-3">
                     <nav aria-label="Footer menu">
                         <h2 className="text-base font-medium text-white/85">
                             Menu
@@ -93,6 +95,9 @@ export default function Footer() {
                                 <li key={l.label}>
                                     <Link
                                         href={l.href}
+                                        onClick={(e) =>
+                                            scrollToAnchor(e, l.href)
+                                        }
                                         className="transition-opacity hover:opacity-70"
                                     >
                                         {l.label}
@@ -120,30 +125,36 @@ export default function Footer() {
                         </ul>
                     </nav>
 
-                    <div className="sm:col-span-2 lg:col-span-1">
+                    <div className="col-span-2 lg:col-span-1">
                         <h2 className="text-base font-medium text-white/85">
                             Stay In Loop
                         </h2>
+
+                        {/* Stacked on phones, inline from sm, stacked again in the narrow lg column */}
                         <form
                             onSubmit={onSubmit}
-                            className="mt-4 flex items-center gap-3 border-b border-white/70 pb-1"
+                            className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch lg:flex-col xl:flex-row"
                         >
                             <label htmlFor="newsletter-email" className="sr-only">
                                 Your email address
                             </label>
-                            <span className="h-5 w-5 shrink-0 text-white/90">
-                                <MailIcon />
-                            </span>
-                            <input
-                                id="newsletter-email"
-                                type="email"
-                                required
-                                placeholder="Your email address"
-                                className="min-w-0 flex-1 bg-transparent py-3 text-sm outline-none placeholder:text-white/70"
-                            />
+
+                            <div className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-white/30 bg-white/5 px-4 transition-colors focus-within:border-white/70">
+                                <span className="h-5 w-5 shrink-0 text-white/90">
+                                    <MailIcon />
+                                </span>
+                                <input
+                                    id="newsletter-email"
+                                    type="email"
+                                    required
+                                    placeholder="Your email address"
+                                    className="min-w-0 flex-1 bg-transparent py-3.5 text-base outline-none placeholder:text-white/70 sm:text-sm"
+                                />
+                            </div>
+
                             <button
                                 type="submit"
-                                className="mb-[-1px] rounded-md px-8 py-4 text-sm font-semibold text-[#010301] shadow-lg shadow-orange-500/20"
+                                className="shrink-0 rounded-md px-8 py-3.5 text-sm font-semibold text-[#010301] shadow-lg shadow-orange-500/20"
                                 style={{
                                     background: `
                                         radial-gradient(at 0% 0%, #FF9C00 0%, transparent 50%),
@@ -163,7 +174,7 @@ export default function Footer() {
 
                 <div className="flex flex-col gap-3 py-8 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
                     <p>© 2026 lina hypnotherapist. All rights reserved.</p>
-                    <ul className="flex gap-6">
+                    <ul className="flex flex-wrap gap-x-6 gap-y-2">
                         {LEGAL.map((l) => (
                             <li key={l.label}>
                                 <a
@@ -196,7 +207,7 @@ function ContactItem({ icon, children }: { icon: ReactNode; children: ReactNode 
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-white/10">
                 <span className="h-4 w-4">{icon}</span>
             </span>
-            <span className="leading-snug">{children}</span>
+            <span className="min-w-0 leading-snug">{children}</span>
         </li>
     );
 }

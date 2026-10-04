@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 const CARDS = [
@@ -194,7 +194,7 @@ function Card({
 function Marquee() {
     return (
         <div
-            className="flex select-none overflow-hidden py-8"
+            className="flex select-none overflow-hidden py-4 md:py-8"
             style={{
                 maskImage:
                     "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
@@ -220,36 +220,114 @@ function Marquee() {
 }
 
 function MarqueeGroup({ ariaHidden = false }: { ariaHidden?: boolean }) {
+    const trackRef = useRef<HTMLDivElement>(null);
+
+    const positionRef = useRef(0);
+
+    // Pixels per second
+    const SPEED = 150;
+
+    const velocityRef = useRef(-SPEED);
+    const targetVelocityRef = useRef(-SPEED);
+
+    const animationRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        const track = trackRef.current;
+        if (!track) return;
+
+        let lastScrollY = window.scrollY;
+        let lastTime: number | null = null;
+
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+
+            if (currentScrollY > lastScrollY) {
+                // Scroll down → marquee goes LEFT
+                targetVelocityRef.current = -SPEED;
+            } else if (currentScrollY < lastScrollY) {
+                // Scroll up → marquee goes RIGHT
+                targetVelocityRef.current = SPEED;
+            }
+
+            lastScrollY = currentScrollY;
+        };
+
+        const animate = (timestamp: number) => {
+            if (lastTime === null) {
+                lastTime = timestamp;
+            }
+
+            const delta = Math.min(timestamp - lastTime, 32);
+            lastTime = timestamp;
+
+            // Smoothly accelerate toward the new direction.
+            velocityRef.current +=
+                (targetVelocityRef.current - velocityRef.current) * 0.12;
+
+            positionRef.current +=
+                velocityRef.current * (delta / 1000);
+
+            const width = track.scrollWidth / 3;
+
+            // Infinite loop — works in both directions.
+            if (positionRef.current <= -width) {
+                positionRef.current += width;
+            }
+
+            if (positionRef.current >= 0) {
+                positionRef.current -= width;
+            }
+
+            track.style.transform = `translate3d(${positionRef.current}px, 0, 0)`;
+
+            animationRef.current = requestAnimationFrame(animate);
+        };
+
+        window.addEventListener("scroll", handleScroll, {
+            passive: true,
+        });
+
+        animationRef.current = requestAnimationFrame(animate);
+
+        return () => {
+            window.removeEventListener("scroll", handleScroll);
+
+            if (animationRef.current !== null) {
+                cancelAnimationFrame(animationRef.current);
+            }
+        };
+    }, []);
+
     return (
         <div
             aria-hidden={ariaHidden || undefined}
-            className="flex min-w-full shrink-0 animate-marquee items-center motion-reduce:animate-none"
+            className="flex min-w-full shrink-0 overflow-hidden"
         >
-            {[0, 1].map((n) => (
-                <div key={n} className="flex shrink-0 items-center">
-                    <span className="whitespace-nowrap font-serif text-xl tracking-tight text-[#3B3C39] sm:text-2xl lg:text-4xl">
-                        You are not broken. You may simply be working at the
-                        wrong level.
-                    </span>
-                    <StarIcon />
-                </div>
-            ))}
-        </div>
-    );
-}
+            <div
+                ref={trackRef}
+                className="flex shrink-0 items-center will-change-transform"
+            >
+                {[0, 1, 2].map((n) => (
+                    <div
+                        key={n}
+                        className="flex shrink-0 items-center"
+                    >
+                        <span className="whitespace-nowrap font-serif text-xl tracking-tight text-[#3B3C39] sm:text-2xl lg:text-4xl">
+                            You are not broken. You may simply be working at the
+                            wrong level.
+                        </span>
 
-function StarIcon() {
-    return (
-        <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="mx-4 h-6 w-6 shrink-0 text-[#3B3C39] sm:mx-7 sm:h-8 sm:w-8 lg:mx-10 lg:h-9 lg:w-9"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-        >
-            <path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M5.5 3.5l3 4M15.5 16.5l3 4M18.5 3.5l-3 4M8.5 16.5l-3 4" />
-        </svg>
+                        <Image
+                            src="/svg/star.svg"
+                            alt=""
+                            width={36}
+                            height={36}
+                            className="mx-4 h-6 w-6 shrink-0 animate-[spin_8s_linear_infinite] sm:mx-7 sm:h-8 sm:w-8 lg:mx-10 lg:h-12 lg:w-12"
+                        />
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 }

@@ -62,7 +62,7 @@ export default function Services() {
                 </div>
 
                 {/* Updated auto-rows to 232px to match the new row height math */}
-                <ul className="mt-10 grid grid-cols-1 gap-3 sm:mt-12 md:grid-cols-4 md:auto-rows-[232px] md:gap-4">
+                <ul className="mt-10 grid grid-cols-1 gap-3 sm:mt-12 md:grid-cols-4 md:auto-rows-58 md:gap-4">
                     {SERVICES.map((s) => (
                         <li
                             key={s.id}
@@ -75,15 +75,22 @@ export default function Services() {
                                 sizes="(min-width: 768px) 50vw, 100vw"
                                 className={`object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none ${EASE}`}
                             />
+
                             <div
                                 aria-hidden
-                                className="absolute inset-0 bg-linear-to-t from-black/60 via-black/5 to-black/10"
+                                className="absolute inset-x-0 bottom-0 h-25 backdrop-blur-lg"
+                                style={{
+                                    maskImage:
+                                        "linear-gradient(to top, black 0%, rgba(0,0,0,0.7) 50%, transparent 100%)",
+                                    WebkitMaskImage:
+                                        "linear-gradient(to top, black 0%, rgba(0,0,0,0.7) 50%, transparent 100%)",
+                                }}
                             />
 
-                            <span className="absolute left-4 top-3 font-serif text-sm italic text-white">
+                            <span className="absolute left-4 top-3 font-serif text-lg md:text-2xl italic text-white">
                                 {s.id}
                             </span>
-                            <h3 className="absolute bottom-4 left-4 right-4 text-sm font-medium text-white sm:text-base">
+                            <h3 className="absolute bottom-4 left-4 right-4 text-lg  text-white md:text-[22px]">
                                 {s.title}
                             </h3>
                         </li>
@@ -91,21 +98,18 @@ export default function Services() {
 
                     {/* 06 – text card */}
                     <li
-                        // Updated to 232px to match the 1-row height of services 3-5
-                        className="relative flex h-64 flex-col overflow-hidden rounded-2xl bg-white p-5 md:col-span-2 md:h-[232px]"
+                        className="relative flex h-64 flex-col overflow-hidden rounded-2xl bg-white bg-cover bg-center p-5 md:col-span-2 md:h-58"
                         style={{
-                            background: `
-                                radial-gradient(ellipse 60% 70% at 100% 0%, #B9DA9A 0%, transparent 70%),
-                                radial-gradient(ellipse 50% 60% at 0% 0%, #F1E9A0 0%, transparent 70%),
-                                #fff
-                            `,
+                            backgroundImage: "url('/image/card-bg.png')",
                         }}
                     >
-                        <span className="sr-only">06</span>
-                        <h3 className="mt-auto text-sm font-semibold text-[#1C1B17] sm:text-base">
+                        <span className="font-serif text-lg italic text-[#1C1B17] md:text-2xl">
+                            06
+                        </span>
+                        <h3 className="mt-auto text-lg font-semibold text-[#1C1B17] md:text-[22px]">
                             Sleep &amp; relaxation
                         </h3>
-                        <p className="mt-2 max-w-xs text-xs leading-relaxed text-[#1C1B17]/60">
+                        <p className="my-2 text-sm leading-relaxed text-[#1C1B17]/80">
                             When it is difficult to let your body and mind
                             settle.
                         </p>

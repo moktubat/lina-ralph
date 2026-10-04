@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useLenis } from "@/components/providers/SmoothScrollProvider";
 
 const ITEMS = [
     {
@@ -49,9 +52,90 @@ const EASE = "ease-[cubic-bezier(.22,1,.36,1)]";
 
 export default function DeeperPattern() {
     const [active, setActive] = useState(0);
+    const sectionRef = useRef<HTMLElement>(null);
+    const pinTriggerRef = useRef<ScrollTrigger | null>(null);
+    const lenis = useLenis();
+
+    useEffect(() => {
+        gsap.registerPlugin(ScrollTrigger);
+
+        const section = sectionRef.current;
+        if (!section) return;
+
+        const onUpdate = (self: ScrollTrigger) => {
+            const i = Math.min(
+                ITEMS.length - 1,
+                Math.floor(self.progress * ITEMS.length),
+            );
+            setActive((prev) => (prev === i ? prev : i));
+        };
+
+        const mm = gsap.matchMedia();
+
+        // Desktop: pin the section and switch tabs while scrolling.
+        mm.add(
+            "(prefers-reduced-motion: no-preference) and (min-width: 1024px)",
+            () => {
+                const st = ScrollTrigger.create({
+                    trigger: section,
+                    // If the section is taller than the viewport, pin once its bottom is visible.
+                    start: () =>
+                        section.offsetHeight <= window.innerHeight
+                            ? "top top"
+                            : "bottom bottom",
+                    end: () => `+=${window.innerHeight * 1.5}`,
+                    pin: true,
+                    anticipatePin: 1,
+                    invalidateOnRefresh: true,
+                    onUpdate,
+                });
+                pinTriggerRef.current = st;
+
+                return () => {
+                    st.kill();
+                    pinTriggerRef.current = null;
+                };
+            },
+        );
+
+        // Mobile / tablet: no pin, tabs follow scroll progress through the section.
+        mm.add(
+            "(prefers-reduced-motion: no-preference) and (max-width: 1023px)",
+            () => {
+                const st = ScrollTrigger.create({
+                    trigger: section,
+                    start: "top 45%",
+                    end: "bottom 75%",
+                    onUpdate,
+                });
+
+                return () => st.kill();
+            },
+        );
+
+        return () => mm.revert();
+    }, []);
+
+    // Clicking a tab: on desktop scroll to that step, otherwise just switch.
+    const goTo = (i: number) => {
+        const st = pinTriggerRef.current;
+        if (!st) {
+            setActive(i);
+            return;
+        }
+
+        const y = st.start + ((i + 0.5) / ITEMS.length) * (st.end - st.start);
+
+        if (lenis) {
+            lenis.scrollTo(y, { duration: 1.2 });
+        } else {
+            window.scrollTo({ top: y, behavior: "smooth" });
+        }
+    };
 
     return (
         <section
+            ref={sectionRef}
             className="relative w-full overflow-hidden rounded-b-4xl text-white sm:rounded-b-[48px] lg:rounded-b-[64px]"
             style={{
                 background: `
@@ -70,18 +154,18 @@ export default function DeeperPattern() {
                     </h2>
 
                     {/* Tabs */}
-                    <div className="flex w-[410px] flex-col justify-between gap-10 md:col-span-2 lg:col-span-1 lg:row-start-2">
+                    <div className="flex w-full flex-col justify-between gap-10 md:col-span-2 md:w-[410px] lg:col-span-1 lg:row-start-2">
                         <div
                             role="tablist"
                             aria-label="From what you want to the deeper pattern"
-                            className="mt-10 grid grid-cols-1 gap-x-4 sm:grid-cols-3 lg:grid-cols-1 lg:gap-x-0"
+                            className="mt-4 grid grid-cols-1 gap-x-4 sm:grid-cols-3 md:mt-10 lg:grid-cols-1 lg:gap-x-0"
                         >
                             {ITEMS.map((item, i) => (
                                 <Tab
                                     key={item.id}
                                     label={item.label}
                                     isActive={active === i}
-                                    onActivate={() => setActive(i)}
+                                    onActivate={() => goTo(i)}
                                 />
                             ))}
                         </div>
@@ -99,7 +183,7 @@ export default function DeeperPattern() {
 
                     {/* Image */}
                     <div className="md:col-start-1 lg:col-start-2 lg:row-start-2">
-                        <div className="relative h-[620px] w-[410px] overflow-hidden rounded-2xl bg-black/20 shadow-2xl shadow-black/20">
+                        <div className="relative mx-auto aspect-[410/620] w-full max-w-[260px] overflow-hidden rounded-2xl bg-black/20 shadow-2xl shadow-black/20 sm:max-w-[300px] md:mx-0 md:aspect-auto md:h-[620px] md:w-[410px] md:max-w-none">
                             {ITEMS.map((item, i) => (
                                 <Image
                                     key={item.id}
@@ -107,32 +191,33 @@ export default function DeeperPattern() {
                                     alt={item.alt}
                                     fill
                                     priority={i === 0}
-                                    sizes="(min-width: 1280px) 400px, (min-width: 1024px) 34vw, (min-width: 768px) 50vw, 100vw"
+                                    sizes="(min-width: 1280px) 400px, (min-width: 1024px) 34vw, (min-width: 768px) 50vw, 300px"
                                     aria-hidden={active !== i}
                                     className={`object-cover object-top transition-[opacity,transform,filter] duration-700 motion-reduce:transition-none ${EASE} ${active === i
-                                            ? "scale-100 opacity-100 blur-0"
-                                            : "scale-105 opacity-0 blur-[2px]"
+                                        ? "scale-100 opacity-100 blur-0"
+                                        : "scale-105 opacity-0 blur-[2px]"
                                         }`}
                                 />
                             ))}
                         </div>
                     </div>
 
-                    {/* Pendulum + quotes */}
-                    <div className="mb-10 flex w-[410px] flex-col justify-between gap-8 md:col-start-2 md:row-start-3 lg:col-start-3 lg:row-start-2">
-                        <div className="mt-10 hidden h-14 w-14 items-center justify-center md:flex lg:h-32 lg:w-32">
+                    {/* Quotes (left) + pendulum (right) on mobile; stacked from md up */}
+                    <div className="mt-2 flex w-full flex-row items-center justify-between gap-4 md:col-start-2 md:row-start-3 md:mt-0 md:mb-10 md:w-[410px] md:flex-col md:items-stretch md:gap-8 lg:col-start-3 lg:row-start-2">
+                        <div className="order-2 flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-24 md:order-1 md:mt-10 md:h-14 md:w-14 lg:h-32 lg:w-32">
                             <Image
+                                key={ITEMS[active].id}
                                 src={ITEMS[active].pendulum}
                                 alt=""
                                 width={128}
                                 height={128}
-                                className="object-contain"
+                                className="h-full w-full object-contain"
                             />
                         </div>
 
                         <div
                             aria-live="polite"
-                            className="grid max-w-sm font-serif text-lg leading-snug tracking-tight md:text-2xl"
+                            className="order-1 grid min-w-0 flex-1 font-serif text-lg leading-snug tracking-tight md:order-2 md:max-w-sm md:flex-none md:text-2xl"
                         >
                             {ITEMS.map((item, i) => (
                                 <ul
@@ -144,8 +229,8 @@ export default function DeeperPattern() {
                                         <li
                                             key={quote}
                                             className={`transition-[opacity,transform] duration-700 motion-reduce:transition-none ${EASE} ${active === i
-                                                    ? "translate-y-0 opacity-100"
-                                                    : "translate-y-2 opacity-0"
+                                                ? "translate-y-0 opacity-100"
+                                                : "translate-y-2 opacity-0"
                                                 }`}
                                             style={{
                                                 transitionDelay:
@@ -181,15 +266,13 @@ function Tab({
             type="button"
             role="tab"
             aria-selected={isActive}
-            onMouseEnter={onActivate}
-            onFocus={onActivate}
             onClick={onActivate}
             className="group relative w-full py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-[#E8E39A]/70 sm:py-4"
         >
             <span
                 className={`block transition-[color,font-size] duration-500 motion-reduce:transition-none ${EASE} ${isActive
-                        ? "text-xl text-white sm:text-2xl"
-                        : "text-base text-white/55 group-hover:text-white/80 sm:text-lg"
+                    ? "text-xl text-white sm:text-2xl"
+                    : "text-base text-white/55 group-hover:text-white/80 sm:text-lg"
                     }`}
             >
                 {label}
