@@ -50,7 +50,12 @@ export function useAnchorScroll() {
             if (lenis) {
                 lenis.scrollTo(target, { duration: 1.6 });
             } else {
-                target.scrollIntoView({ behavior: "smooth" });
+                const prefersReducedMotion = window.matchMedia(
+                    "(prefers-reduced-motion: reduce)",
+                ).matches;
+                target.scrollIntoView({
+                    behavior: prefersReducedMotion ? "auto" : "smooth",
+                });
             }
         },
         [lenis],
@@ -59,6 +64,10 @@ export function useAnchorScroll() {
 
 export default function SmoothScrollProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return;
+        }
+
         gsap.registerPlugin(ScrollTrigger);
 
         const instance = new Lenis({

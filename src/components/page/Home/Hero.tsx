@@ -1,37 +1,47 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import Image from "next/image";
 import gsap from "gsap";
+import { useGSAP } from "@gsap/react";
 import Button from "@/components/ui/Button";
 
 export default function Hero() {
+    const sectionRef = useRef<HTMLElement>(null);
     const headlineRef = useRef<HTMLHeadingElement>(null);
     const cardRef = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        const ctx = gsap.context(() => {
-            gsap.from(headlineRef.current, {
-                y: 40,
-                opacity: 0,
-                duration: 1,
-                ease: "power3.out",
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+
+            mm.add("(prefers-reduced-motion: no-preference)", () => {
+                gsap.from(headlineRef.current, {
+                    y: 40,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                });
+
+                gsap.from(cardRef.current, {
+                    y: 30,
+                    opacity: 0,
+                    duration: 1,
+                    delay: 0.3,
+                    ease: "power3.out",
+                });
             });
 
-            gsap.from(cardRef.current, {
-                y: 30,
-                opacity: 0,
-                duration: 1,
-                delay: 0.3,
-                ease: "power3.out",
-            });
-        });
-
-        return () => ctx.revert();
-    }, []);
+            return () => mm.revert();
+        },
+        { scope: sectionRef }
+    );
 
     return (
-        <section className="relative min-h-dvh w-full overflow-hidden px-4 pt-40 pb-10 sm:pb-14 md:pb-16">
+        <section
+            ref={sectionRef}
+            className="relative min-h-dvh w-full overflow-hidden px-4 pt-40 pb-10 sm:pb-14 md:pb-16"
+        >
             <Image
                 src="/image/heroBg.webp"
                 alt="Client receiving a calming hypnotherapy session"
@@ -84,12 +94,13 @@ export default function Hero() {
                     <div className="flex flex-wrap items-center gap-3">
                         <Button
                             variant="primary"
+                            href="#contact"
                             avatarSrc="/image/avatar-lina.png"
                         >
                             Book a free consultation
                         </Button>
 
-                        <Button variant="outline">
+                        <Button variant="outline" href="#process">
                             See how it works
                         </Button>
                     </div>

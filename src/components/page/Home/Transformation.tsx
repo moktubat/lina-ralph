@@ -43,8 +43,7 @@ const IMAGES = [
     },
 ];
 
-// Cards are spread evenly over the FULL circle so the infinite loop has no gaps.
-const CARD_COUNT = 12; // 12 cards -> 30° step. Images repeat (index % 6).
+const CARD_COUNT = 12;
 const STEP = 360 / CARD_COUNT;
 const CARDS = Array.from({ length: CARD_COUNT }, (_, i) => ({
     id: i,
@@ -52,17 +51,12 @@ const CARDS = Array.from({ length: CARD_COUNT }, (_, i) => ({
     ...IMAGES[i % IMAGES.length],
 }));
 
-const CARD_SIZE = "h-60 w-44 sm:h-80 sm:w-56 lg:h-90 lg:w-67"; // lg = 360px x 268px
-const ROTATION_DURATION = 80; // seconds per full turn
+const CARD_SIZE = "h-60 w-44 sm:h-80 sm:w-56 lg:h-90 lg:w-67";
+const ROTATION_DURATION = 80;
 
 const getRadius = () =>
     Math.min(Math.max(window.innerWidth * 0.62, 520), 900);
 
-/**
- * Clip a w×h rect (card-local coords, origin = card centre) against the half-plane
- * f(p) = cosφ·x − sinφ·y + cx < 0  (i.e. the part of the card left of the divider).
- * Returns a CSS clip-path polygon string.
- */
 function getClipPath(phi: number, cx: number, w: number, h: number): string {
     const cos = Math.cos(phi);
     const sin = Math.sin(phi);
@@ -91,14 +85,13 @@ function getClipPath(phi: number, cx: number, w: number, h: number): string {
         }
     }
 
-    if (out.length < 3) return "inset(0 100% 0 0)"; // fully on the "before" side
+    if (out.length < 3) return "inset(0 100% 0 0)";
     return `polygon(${out
         .map(([x, y]) => `${(x + hw).toFixed(2)}px ${(y + hh).toFixed(2)}px`)
         .join(", ")})`;
 }
 
 export default function Transformation() {
-    const sectionRef = useRef<HTMLElement>(null);
     const galleryRef = useRef<HTMLDivElement>(null);
     const ringRef = useRef<HTMLDivElement>(null);
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -109,39 +102,41 @@ export default function Transformation() {
         const ring = ringRef.current;
         if (!gallery || !ring) return;
 
-        const state = { rotation: 0, radius: getRadius() };
+        const state = { rotation: 0, radius: getRadius(), w: 0, h: 0 };
 
         const update = () => {
-            const { rotation, radius } = state;
+            const { rotation, radius, w, h } = state;
+            if (w === 0 || h === 0) return;
+
             for (let i = 0; i < CARDS.length; i++) {
-                const card = cardRefs.current[i];
                 const after = afterRefs.current[i];
-                if (!card || !after) continue;
+                if (!after) continue;
 
                 const phi = ((CARDS[i].angle + rotation) * Math.PI) / 180;
-                // card centre x relative to the divider (ring centre)
                 const cx = radius * Math.sin(phi);
-                after.style.clipPath = getClipPath(
-                    phi,
-                    cx,
-                    card.offsetWidth,
-                    card.offsetHeight,
-                );
+                after.style.clipPath = getClipPath(phi, cx, w, h);
             }
         };
 
-        const applyRadius = () => {
+        const measure = () => {
+            const first = cardRefs.current[0];
+            if (first) {
+                state.w = first.offsetWidth;
+                state.h = first.offsetHeight;
+            }
             state.radius = getRadius();
             gallery.style.setProperty("--r", `${state.radius}px`);
             update();
         };
 
-        applyRadius();
-        window.addEventListener("resize", applyRadius);
+        measure();
+        const ro = new ResizeObserver(measure);
+        ro.observe(gallery);
 
+        let tween: gsap.core.Tween | undefined;
         const mm = gsap.matchMedia();
         mm.add("(prefers-reduced-motion: no-preference)", () => {
-            const tween = gsap.to(state, {
+            tween = gsap.to(state, {
                 rotation: -360,
                 duration: ROTATION_DURATION,
                 ease: "none",
@@ -151,18 +146,24 @@ export default function Transformation() {
                     update();
                 },
             });
-            return () => tween.kill();
+            return () => tween?.kill();
         });
 
+        const io = new IntersectionObserver(
+            ([e]) => (e.isIntersecting ? tween?.resume() : tween?.pause()),
+            { rootMargin: "100px" },
+        );
+        io.observe(gallery);
+
         return () => {
-            window.removeEventListener("resize", applyRadius);
+            ro.disconnect();
+            io.disconnect();
             mm.revert();
         };
     }, []);
 
     return (
         <section
-            ref={sectionRef}
             className="relative w-full overflow-hidden rounded-t-4xl text-white sm:rounded-t-[48px] lg:rounded-t-[64px] pt-14 pb-20 sm:pt-20 sm:pb-24 lg:pt-24 lg:pb-32"
             style={{
                 background: `
@@ -224,6 +225,7 @@ export default function Transformation() {
                                 alt={card.altBefore}
                                 fill
                                 loading="eager"
+                                fetchPriority="low"
                                 sizes="(min-width: 1024px) 268px, (min-width: 640px) 224px, 176px"
                                 className="object-cover"
                             />
@@ -240,6 +242,7 @@ export default function Transformation() {
                                     alt={card.altAfter}
                                     fill
                                     loading="eager"
+                                    fetchPriority="low"
                                     sizes="(min-width: 1024px) 268px, (min-width: 640px) 224px, 176px"
                                     className="object-cover"
                                 />

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, ReactNode } from "react";
 import { useAnchorScroll } from "@/components/providers/SmoothScrollProvider";
@@ -21,14 +22,14 @@ const SOCIAL = [
 ];
 
 const LEGAL = [
-    { label: "User Agreement", href: "#" },
-    { label: "Data Privacy", href: "#" },
-    { label: "Site Map", href: "#" },
+    { label: "User Agreement", href: "/user-agreement" },
+    { label: "Data Privacy", href: "/data-privacy" },
+    { label: "Site Map", href: "/site-map" },
 ];
 
 export default function Footer() {
     const scrollToAnchor = useAnchorScroll();
-    // TODO: connect to your newsletter provider.
+
     function onSubmit(e: FormEvent<HTMLFormElement>) {
         e.preventDefault();
     }
@@ -36,45 +37,36 @@ export default function Footer() {
     return (
         <footer className="mt-16 w-full overflow-clip bg-[#2E3C20] text-[#F4F2EE]">
             <div className="mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 lg:pt-16">
-                {/* Wordmark + contact */}
+                {/* Logo + Contact */}
                 <div className="grid gap-12 pb-12 lg:grid-cols-[1.4fr_1fr] lg:pb-14">
-                    <p
-                        aria-label="Lina Ralph"
-                        className="font-serif text-7xl italic leading-[0.85] tracking-tight sm:text-8xl lg:text-[9.5rem]"
-                    >
-                        <span className="block">Lina</span>
-                        <span className="mt-1 flex items-end gap-1 pl-6 sm:pl-10">
-                            <PendulumMark className="-ml-10 mb-2 h-14 w-14 sm:-ml-16 sm:h-20 sm:w-20 lg:mb-4 lg:h-24 lg:w-24" />
-                            <span>Ralph</span>
-                        </span>
-                    </p>
+                    <div className="flex items-start">
+                        <Link href="/" aria-label="Lina Ralph - Home" className="block">
+                            <Image src="/svg/logo.svg" alt="Lina Ralph" width={380} height={100} priority className="block h-auto w-[180px] max-w-full md:w-[380px]" />
+                        </Link>
+                    </div>
 
                     <div className="lg:pl-16">
-                        <h2 className="text-sm font-medium text-white/85">
-                            Get in Touch
-                        </h2>
+                        <h2 className="text-sm font-medium text-white/85">Get in Touch</h2>
+
                         <ul className="mt-5 space-y-5 text-sm">
                             <ContactItem icon={<PinIcon />}>
                                 18 Rowan Street
                                 <br />
                                 City Centre, DC 20001
                             </ContactItem>
+
                             <ContactItem icon={<MailIcon />}>
-                                <a
-                                    href="mailto:lina@therapish.com"
-                                    className="break-all hover:underline"
-                                >
+                                <a href="mailto:lina@therapish.com" className="break-all hover:underline">
                                     lina@therapish.com
                                 </a>
                             </ContactItem>
+
                             <ContactItem icon={<PhoneIcon />}>
-                                <a
-                                    href="tel:+15035551234"
-                                    className="hover:underline"
-                                >
+                                <a href="tel:+15035551234" className="hover:underline">
                                     +1 (503) 555-1234
                                 </a>
                             </ContactItem>
+
                             <ContactItem icon={<ClockIcon />}>
                                 Mon–Fri, 9am – 6pm PST
                             </ContactItem>
@@ -84,57 +76,38 @@ export default function Footer() {
 
                 <Divider />
 
-                {/* Link columns */}
+                {/* Link Columns */}
                 <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-10 lg:grid-cols-3">
                     <nav aria-label="Footer menu">
-                        <h2 className="text-base font-medium text-white/85">
-                            Menu
-                        </h2>
+                        <h2 className="text-base font-medium text-white/85">Menu</h2>
+
                         <ul className="mt-4 space-y-3 text-base">
                             {MENU.map((l) => (
                                 <li key={l.label}>
-                                    <Link
-                                        href={l.href}
-                                        onClick={(e) =>
-                                            scrollToAnchor(e, l.href)
-                                        }
-                                        className="transition-opacity hover:opacity-70"
-                                    >
+                                    <AnimatedLink href={l.href} onClick={(e) => scrollToAnchor(e, l.href)}>
                                         {l.label}
-                                    </Link>
+                                    </AnimatedLink>
                                 </li>
                             ))}
                         </ul>
                     </nav>
 
                     <nav aria-label="Social links">
-                        <h2 className="text-base font-medium text-white/85">
-                            Social Links
-                        </h2>
+                        <h2 className="text-base font-medium text-white/85">Social Links</h2>
+
                         <ul className="mt-4 space-y-3 text-base">
                             {SOCIAL.map((l) => (
                                 <li key={l.label}>
-                                    <a
-                                        href={l.href}
-                                        className="transition-opacity hover:opacity-70"
-                                    >
-                                        {l.label}
-                                    </a>
+                                    <AnimatedLink href={l.href}>{l.label}</AnimatedLink>
                                 </li>
                             ))}
                         </ul>
                     </nav>
 
                     <div className="col-span-2 lg:col-span-1">
-                        <h2 className="text-base font-medium text-white/85">
-                            Stay In Loop
-                        </h2>
+                        <h2 className="text-base font-medium text-white/85">Stay In Loop</h2>
 
-                        {/* Stacked on phones, inline from sm, stacked again in the narrow lg column */}
-                        <form
-                            onSubmit={onSubmit}
-                            className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch lg:flex-col xl:flex-row"
-                        >
+                        <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch lg:flex-col xl:flex-row">
                             <label htmlFor="newsletter-email" className="sr-only">
                                 Your email address
                             </label>
@@ -143,27 +116,11 @@ export default function Footer() {
                                 <span className="h-5 w-5 shrink-0 text-white/90">
                                     <MailIcon />
                                 </span>
-                                <input
-                                    id="newsletter-email"
-                                    type="email"
-                                    required
-                                    placeholder="Your email address"
-                                    className="min-w-0 flex-1 bg-transparent py-3.5 text-base outline-none placeholder:text-white/70 sm:text-sm"
-                                />
+
+                                <input id="newsletter-email" type="email" required placeholder="Your email address" className="min-w-0 flex-1 bg-transparent py-3.5 text-base outline-none placeholder:text-white/70 sm:text-sm" />
                             </div>
 
-                            <button
-                                type="submit"
-                                className="shrink-0 rounded-md px-8 py-3.5 text-sm font-semibold text-[#010301] shadow-lg shadow-orange-500/20"
-                                style={{
-                                    background: `
-                                        radial-gradient(at 0% 0%, #FF9C00 0%, transparent 50%),
-                                        radial-gradient(at 100% 0%, #FFFEFD 0%, transparent 50%),
-                                        radial-gradient(at 100% 100%, #F8A91A 0%, transparent 50%),
-                                        #FF9C00
-                                    `,
-                                }}
-                            >
+                            <button type="submit" className="shrink-0 rounded-md px-8 py-3.5 text-sm font-semibold text-[#010301] shadow-lg shadow-orange-500/20" style={{ background: "radial-gradient(at 0% 0%, #FF9C00 0%, transparent 50%), radial-gradient(at 100% 0%, #FFFEFD 0%, transparent 50%), radial-gradient(at 100% 100%, #F8A91A 0%, transparent 50%), #FF9C00" }}>
                                 Subscribe
                             </button>
                         </form>
@@ -172,17 +129,14 @@ export default function Footer() {
 
                 <Divider />
 
+                {/* Bottom */}
                 <div className="flex flex-col gap-3 py-8 text-sm text-white/80 sm:flex-row sm:items-center sm:justify-between">
                     <p>© 2026 lina hypnotherapist. All rights reserved.</p>
+
                     <ul className="flex flex-wrap gap-x-6 gap-y-2">
                         {LEGAL.map((l) => (
                             <li key={l.label}>
-                                <a
-                                    href={l.href}
-                                    className="transition-opacity hover:opacity-70"
-                                >
-                                    {l.label}
-                                </a>
+                                <AnimatedLink href={l.href}>{l.label}</AnimatedLink>
                             </li>
                         ))}
                     </ul>
@@ -192,13 +146,25 @@ export default function Footer() {
     );
 }
 
-function Divider() {
+function AnimatedLink({
+    href,
+    children,
+    onClick,
+}: {
+    href: string;
+    children: ReactNode;
+    onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
+}) {
     return (
-        <div
-            aria-hidden
-            className="h-px w-full bg-linear-to-r from-transparent via-white/25 to-transparent"
-        />
+        <Link href={href} onClick={onClick} className="group relative inline-block transition-opacity hover:opacity-70">
+            {children}
+            <span aria-hidden className="absolute bottom-0 left-1/2 h-px w-full -translate-x-1/2 scale-x-0 bg-current transition-transform duration-300 ease-out group-hover:scale-x-100" />
+        </Link>
     );
+}
+
+function Divider() {
+    return <div aria-hidden className="h-px w-full bg-linear-to-r from-transparent via-white/25 to-transparent" />;
 }
 
 function ContactItem({ icon, children }: { icon: ReactNode; children: ReactNode }) {
@@ -212,20 +178,11 @@ function ContactItem({ icon, children }: { icon: ReactNode; children: ReactNode 
     );
 }
 
-/* ---------- icons ---------- */
+/* ---------- Icons ---------- */
 
 function Svg({ children }: { children: ReactNode }) {
     return (
-        <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-full w-full"
-        >
+        <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="h-full w-full">
             {children}
         </svg>
     );
@@ -263,40 +220,5 @@ function ClockIcon() {
             <circle cx="12" cy="12" r="9" />
             <path d="M12 7v5l3 2" />
         </Svg>
-    );
-}
-
-function PendulumMark({ className = "" }: { className?: string }) {
-    return (
-        <svg
-            aria-hidden
-            viewBox="0 0 64 64"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={className}
-        >
-            <defs>
-                <linearGradient id="footer-pendulum" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor="#7DBB8A" />
-                    <stop offset="1" stopColor="#F5B63A" />
-                </linearGradient>
-            </defs>
-            <circle cx="12" cy="8" r="3.5" stroke="#F4F2EE" strokeWidth="1.5" />
-            <path d="m14.500 10.500 12 13" stroke="#F4F2EE" strokeWidth="1.5" />
-            <path
-                d="m24 22 10 10-8 26L10 40Z"
-                stroke="url(#footer-pendulum)"
-                strokeWidth="1.8"
-                fill="url(#footer-pendulum)"
-                fillOpacity=".25"
-            />
-            <path
-                d="M10 40h24M24 22l2 36M34 32 26 40"
-                stroke="url(#footer-pendulum)"
-                strokeWidth="1.2"
-                opacity=".7"
-            />
-        </svg>
     );
 }

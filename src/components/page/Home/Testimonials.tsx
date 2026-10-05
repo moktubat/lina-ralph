@@ -55,12 +55,12 @@ export default function Testimonials() {
             return;
         }
 
-        const interval = setInterval(() => {
+        const id = setTimeout(() => {
             setActive((i) => (i + 1) % TESTIMONIALS.length);
         }, INTERVAL);
 
-        return () => clearInterval(interval);
-    }, []);
+        return () => clearTimeout(id);
+    }, [active]);
 
     return (
         <section
@@ -79,7 +79,7 @@ export default function Testimonials() {
                 </h2>
 
                 <div
-                    aria-live="polite"
+                    aria-live="off"
                     className="mx-auto mt-10 grid max-w-xl grid-cols-[minmax(0,1fr)] sm:mt-12"
                 >
                     {TESTIMONIALS.map((t, i) => (
@@ -106,7 +106,7 @@ export default function Testimonials() {
 
                             <blockquote
                                 style={d(240)}
-                                className={`mt-4 w-full max-w-md text-balance wrap-break-word text-xl font-light leading-snug sm:text-2xl ${REVEAL}`}
+                                className={`mt-4 w-full max-w-md text-balance break-words text-xl font-light leading-snug sm:text-2xl ${REVEAL}`}
                             >
                                 &ldquo;{t.quote}&rdquo;
                             </blockquote>
@@ -141,8 +141,8 @@ export default function Testimonials() {
                             aria-label={`Testimonial from ${t.name}`}
                             onClick={() => setActive(i)}
                             className={`h-2 rounded-full outline-none transition-[width,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-[#E8E39A]/70 motion-reduce:transition-none ${EASE} ${active === i
-                                ? "w-6 bg-white"
-                                : "w-2 bg-white/40 hover:bg-white/70"
+                                    ? "w-6 bg-white"
+                                    : "w-2 bg-white/40 hover:bg-white/70"
                                 }`}
                         />
                     ))}

@@ -7,6 +7,7 @@ import {
     useAnchorScroll,
     useLenis,
 } from "@/components/providers/SmoothScrollProvider";
+import Image from "next/image";
 
 const NAV_LINKS = [
     { label: "Process", href: "#process" },
@@ -22,14 +23,12 @@ export default function Navbar() {
     const lenis = useLenis();
     const scrollToAnchor = useAnchorScroll();
 
-    // Freeze page scroll (Lenis + native) while the menu is open.
     useEffect(() => {
         if (!open) return;
         lenis?.stop();
         return () => lenis?.start();
     }, [open, lenis]);
 
-    // Close on Escape.
     useEffect(() => {
         if (!open) return;
         const onKey = (e: KeyboardEvent) => {
@@ -39,7 +38,6 @@ export default function Navbar() {
         return () => window.removeEventListener("keydown", onKey);
     }, [open]);
 
-    // Close if the viewport grows to the desktop layout.
     useEffect(() => {
         const mq = window.matchMedia("(min-width: 1024px)");
         const onChange = (e: MediaQueryListEvent) => {
@@ -51,7 +49,6 @@ export default function Navbar() {
 
     function handleAnchor(e: MouseEvent<HTMLElement>, href: string) {
         setOpen(false);
-        // Lenis ignores scrollTo while stopped, so restart it first.
         lenis?.start();
         scrollToAnchor(e, href);
     }
@@ -65,10 +62,16 @@ export default function Navbar() {
                         setOpen(false);
                         lenis?.start();
                     }}
-                    className="relative z-10 font-serif text-2xl italic leading-tight text-white sm:text-3xl"
+                    className="relative z-10 block w-[72px] sm:w-[86px]"
                 >
-                    Lina
-                    <br /> Ralph
+                    <Image
+                        src="/svg/logo.svg"
+                        alt="Lina Ralph"
+                        width={86}
+                        height={86}
+                        priority
+                        className="h-auto w-full object-contain"
+                    />
                 </Link>
 
                 {/* Desktop links */}
@@ -127,8 +130,8 @@ export default function Navbar() {
                 aria-hidden={!open}
                 data-lenis-prevent
                 className={`fixed inset-0 z-0 overflow-y-auto transition-[opacity,visibility] duration-500 motion-reduce:transition-none lg:hidden ${open
-                        ? "visible opacity-100"
-                        : "pointer-events-none invisible opacity-0"
+                    ? "visible opacity-100"
+                    : "pointer-events-none invisible opacity-0"
                     }`}
                 style={{
                     background: `
@@ -149,8 +152,8 @@ export default function Navbar() {
                                     href={link.href}
                                     onClick={(e) => handleAnchor(e, link.href)}
                                     className={`flex items-baseline gap-4 py-5 font-serif text-3xl italic text-white outline-none transition-[transform,opacity] duration-700 motion-reduce:transition-none focus-visible:text-[#E8E39A] sm:text-4xl ${EASE} ${open
-                                            ? "translate-y-0 opacity-100"
-                                            : "translate-y-8 opacity-0"
+                                        ? "translate-y-0 opacity-100"
+                                        : "translate-y-8 opacity-0"
                                         }`}
                                     style={{
                                         transitionDelay: open
@@ -168,10 +171,9 @@ export default function Navbar() {
                     </ul>
 
                     <div
-                        onClickCapture={(e) => handleAnchor(e, "#contact")}
                         className={`mt-auto pt-12 transition-[transform,opacity] duration-700 motion-reduce:transition-none ${EASE} ${open
-                                ? "translate-y-0 opacity-100"
-                                : "translate-y-8 opacity-0"
+                            ? "translate-y-0 opacity-100"
+                            : "translate-y-8 opacity-0"
                             }`}
                         style={{ transitionDelay: open ? "520ms" : "0ms" }}
                     >
@@ -179,6 +181,7 @@ export default function Navbar() {
                             variant="primary"
                             href="#contact"
                             avatarSrc="/image/avatar-lina.png"
+                            onClick={(e) => handleAnchor(e, "#contact")}
                         >
                             Book a free consultation
                         </Button>

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -14,18 +14,67 @@ const inter = Inter({
 
 const reckless = localFont({
   src: [
-    { path: "../../public/font/RecklessStandardXL-TRIAL-RegularItalic.otf", weight: "400", style: "normal" },
-    { path: "../../public/font/RecklessStandardXL-TRIAL-MediumItalic.otf", weight: "500", style: "normal" },
+    {
+      path: "../../public/font/RecklessStandardXL-TRIAL-RegularItalic.otf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../../public/font/RecklessStandardXL-TRIAL-MediumItalic.otf",
+      weight: "500",
+      style: "italic",
+    },
   ],
   variable: "--font-reckless",
   display: "swap",
+  fallback: ["Georgia", "serif"],
 });
 
+const DESCRIPTION =
+  "Hypnotherapy with Lina Ralph. Understand the pattern underneath anxiety, overthinking, habits and sleep, and book a free, no-pressure consultation.";
+
 export const metadata: Metadata = {
-  title: "Lina Ralph",
+  metadataBase: new URL("https://lina-ralph.vercel.app"),
+
+  title: {
+    default: "Lina Ralph | Hypnotherapist",
+    template: "%s | Lina Ralph",
+  },
+
+  description: DESCRIPTION,
+
+  openGraph: {
+    title: "Lina Ralph | Hypnotherapist",
+    description: DESCRIPTION,
+    url: "https://lina-ralph.vercel.app",
+    siteName: "Lina Ralph",
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "Lina Ralph | Hypnotherapist",
+    description: DESCRIPTION,
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+
+export const viewport: Viewport = {
+  themeColor: "#2E3C20",
+  width: "device-width",
+  initialScale: 1,
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={`${inter.variable} ${reckless.variable}`}>
       <body className="font-sans antialiased">

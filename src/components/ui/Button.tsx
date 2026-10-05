@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-import { ButtonHTMLAttributes, ReactNode } from "react";
+import { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from "react";
+import { useAnchorScroll } from "@/components/providers/SmoothScrollProvider";
 
 type ButtonProps = {
     children: ReactNode;
@@ -8,7 +11,16 @@ type ButtonProps = {
     avatarSrc?: string;
     href?: string;
     className?: string;
-} & ButtonHTMLAttributes<HTMLButtonElement>;
+    onClick?: MouseEventHandler<HTMLElement>;
+} & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">;
+
+const PRIMARY_BG = `
+    radial-gradient(at 0% 0%, #FF9C00 0%, transparent 50%),
+    radial-gradient(at 0% 100%, #FF9E03 0%, transparent 50%),
+    radial-gradient(at 100% 0%, #FFFEFD 0%, transparent 50%),
+    radial-gradient(at 100% 100%, #F8A91A 0%, transparent 50%),
+    #FF9C00
+`;
 
 export default function Button({
     children,
@@ -16,26 +28,20 @@ export default function Button({
     avatarSrc,
     href,
     className = "",
+    onClick,
     ...props
 }: ButtonProps) {
+    const scrollToAnchor = useAnchorScroll();
 
     const base =
-        "inline-flex w-full sm:w-auto items-center justify-center gap-3 rounded-md text-sm sm:text-sm py-1";
+        "inline-flex w-full sm:w-auto items-center justify-between gap-3 rounded-md text-sm py-1";
 
     const styles = {
         primary:
-            "text-[#010301] font-semibold shadow-lg shadow-orange-500/20 pl-8 pr-1",
+            "text-[#010301] font-semibold shadow-lg shadow-orange-500/20 pl-5 sm:pl-8 pr-1",
         outline:
-            "bg-transparent border border-white text-white font-medium py-3 px-8",
+            "bg-transparent border border-white text-white font-medium py-3 px-5 sm:px-8",
     };
-
-    const primaryBackground = `
-        radial-gradient(at 0% 0%, #FF9C00 0%, transparent 50%),
-        radial-gradient(at 0% 100%, #FF9E03 0%, transparent 50%),
-        radial-gradient(at 100% 0%, #FFFEFD 0%, transparent 50%),
-        radial-gradient(at 100% 100%, #F8A91A 0%, transparent 50%),
-        #FF9C00
-    `;
 
     const inner = (
         <>
@@ -55,17 +61,20 @@ export default function Button({
     );
 
     const classes = `${base} ${styles[variant]} ${className}`;
+    const style = variant === "primary" ? { background: PRIMARY_BG } : undefined;
 
     if (href) {
         return (
             <Link
                 href={href}
                 className={classes}
-                style={
-                    variant === "primary"
-                        ? { background: primaryBackground }
-                        : undefined
-                }
+                style={style}
+                onClick={(e) => {
+                    onClick?.(e);
+                    if (!e.defaultPrevented) {
+                        scrollToAnchor(e, href);
+                    }
+                }}
             >
                 {inner}
             </Link>
@@ -75,11 +84,8 @@ export default function Button({
     return (
         <button
             className={classes}
-            style={
-                variant === "primary"
-                    ? { background: primaryBackground }
-                    : undefined
-            }
+            style={style}
+            onClick={onClick}
             {...props}
         >
             {inner}

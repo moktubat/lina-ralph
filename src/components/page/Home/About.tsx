@@ -4,7 +4,7 @@ import Reveal from "@/components/ui/Reveal";
 export default function About() {
     return (
         <section id="about" className="w-full bg-[#F4F2EE]">
-            <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-16 sm:py-20 md:grid-cols-2 lg:grid-cols-[405px_406px_405px] lg:gap-8 lg:py-28">
+            <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-16 sm:py-20 md:grid-cols-2 lg:grid-cols-3 lg:gap-8 lg:py-28">
                 {/* Left */}
                 <Reveal className="w-full max-w-101.5 self-start md:col-span-2 lg:col-span-1">
                     <h2 className="font-serif text-3xl font-medium italic leading-[1.15] tracking-tight text-[#1C1B17] sm:text-4xl lg:text-4xl xl:text-5xl">

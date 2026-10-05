@@ -146,7 +146,7 @@ export default function DeeperPattern() {
             }}
         >
             <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:py-24">
-                <div className="grid gap-4 md:grid-cols-2 md:gap-x-4 md:gap-y-10 lg:grid-cols-[410px_410px_410px] lg:grid-rows-[auto_1fr] lg:gap-x-6 lg:gap-y-16">
+                <div className="grid gap-4 md:grid-cols-2 md:gap-x-4 md:gap-y-10 lg:grid-cols-[repeat(3,minmax(0,410px))] lg:justify-center lg:gap-x-6 lg:gap-y-16">
                     {/* Heading */}
                     <h2 className="max-w-md font-serif text-3xl italic leading-[1.15] tracking-tight sm:text-4xl md:col-span-2 lg:col-span-2 lg:row-start-1 lg:max-w-175 lg:text-5xl">
                         Your conscious mind can want one thing while your
@@ -154,7 +154,7 @@ export default function DeeperPattern() {
                     </h2>
 
                     {/* Tabs */}
-                    <div className="flex w-full flex-col justify-between gap-10 md:col-span-2 md:w-[410px] lg:col-span-1 lg:row-start-2">
+                    <div className="flex w-full flex-col justify-between gap-10 md:col-span-2 md:w-full md:max-w-[410px] lg:col-span-1 lg:row-start-2">
                         <div
                             role="tablist"
                             aria-label="From what you want to the deeper pattern"
@@ -183,7 +183,7 @@ export default function DeeperPattern() {
 
                     {/* Image */}
                     <div className="md:col-start-1 lg:col-start-2 lg:row-start-2">
-                        <div className="relative mx-auto aspect-[410/620] w-full max-w-[260px] overflow-hidden rounded-2xl bg-black/20 shadow-2xl shadow-black/20 sm:max-w-[300px] md:mx-0 md:aspect-auto md:h-[620px] md:w-[410px] md:max-w-none">
+                        <div className="relative mx-auto aspect-[410/620] w-full max-w-[260px] overflow-hidden rounded-2xl bg-black/20 shadow-2xl shadow-black/20 sm:max-w-[300px] md:mx-0 md:w-full md:max-w-[410px] md:aspect-[410/620]">
                             {ITEMS.map((item, i) => (
                                 <Image
                                     key={item.id}
@@ -203,7 +203,7 @@ export default function DeeperPattern() {
                     </div>
 
                     {/* Quotes (left) + pendulum (right) on mobile; stacked from md up */}
-                    <div className="mt-2 flex w-full flex-row items-center justify-between gap-4 md:col-start-2 md:row-start-3 md:mt-0 md:mb-10 md:w-[410px] md:flex-col md:items-stretch md:gap-8 lg:col-start-3 lg:row-start-2">
+                    <div className="mt-2 flex w-full flex-row items-center justify-between gap-4 md:col-start-2 md:row-start-3 md:mt-0 md:mb-10 md:w-full md:max-w-[410px] md:flex-col md:items-stretch md:gap-8 lg:col-start-3 lg:row-start-2">
                         <div className="order-2 flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-24 md:order-1 md:mt-10 md:h-14 md:w-14 lg:h-32 lg:w-32">
                             <Image
                                 key={ITEMS[active].id}

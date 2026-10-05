@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import Image from "next/image";
 
 const CARDS = [
@@ -30,6 +30,22 @@ const CARDS = [
     },
 ];
 
+const MARQUEE_STYLE: React.CSSProperties = {
+    maskImage:
+        "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
+    WebkitMaskImage:
+        "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
+    background: `
+      radial-gradient(ellipse at 50% 0%, #EFEDE9 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, #F4F2EE 0%, transparent 50%),
+      radial-gradient(ellipse at 25% 20%, #DEDFDC 0%, transparent 40%),
+      radial-gradient(ellipse at 75% 20%, #DEDFDC 0%, transparent 40%),
+      radial-gradient(ellipse at 25% 80%, #E8E8E4 0%, transparent 40%),
+      radial-gradient(ellipse at 75% 80%, #E8E8E4 0%, transparent 40%),
+      linear-gradient(to bottom right, #E3E5E2, #F1F0EC)
+    `,
+};
+
 export default function Problem() {
     const [hovered, setHovered] = useState<number | null>(null);
 
@@ -55,7 +71,6 @@ export default function Problem() {
                             key={card.id}
                             {...card}
                             isActive={i === 1 || hovered === i}
-                            isSecondaryActive={hovered !== null && i === 1}
                             onActivate={() => {
                                 if (i !== 1) setHovered(i);
                             }}
@@ -74,7 +89,6 @@ export default function Problem() {
 
 type CardProps = (typeof CARDS)[number] & {
     isActive: boolean;
-    isSecondaryActive: boolean;
     onActivate: () => void;
     onDeactivate: () => void;
 };
@@ -191,143 +205,92 @@ function Card({
     );
 }
 
-function Marquee() {
-    return (
-        <div
-            className="flex select-none overflow-hidden py-4 md:py-8"
-            style={{
-                maskImage:
-                    "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
-                WebkitMaskImage:
-                    "linear-gradient(to right, transparent, #000 8%, #000 92%, transparent)",
-                // --- ADDED MESH GRADIENT BACKGROUND ---
-                background: `
-                  radial-gradient(ellipse at 50% 0%, #EFEDE9 0%, transparent 50%),
-                  radial-gradient(ellipse at 50% 100%, #F4F2EE 0%, transparent 50%),
-                  radial-gradient(ellipse at 25% 20%, #DEDFDC 0%, transparent 40%),
-                  radial-gradient(ellipse at 75% 20%, #DEDFDC 0%, transparent 40%),
-                  radial-gradient(ellipse at 25% 80%, #E8E8E4 0%, transparent 40%),
-                  radial-gradient(ellipse at 75% 80%, #E8E8E4 0%, transparent 40%),
-                  linear-gradient(to bottom right, #E3E5E2, #F1F0EC)
-                `,
-            }}
-            aria-label="You are not broken. You may simply be working at the wrong level."
-        >
-            <MarqueeGroup />
-            <MarqueeGroup ariaHidden />
-        </div>
-    );
-}
-
-function MarqueeGroup({ ariaHidden = false }: { ariaHidden?: boolean }) {
+const Marquee = memo(function Marquee() {
     const trackRef = useRef<HTMLDivElement>(null);
-
-    const positionRef = useRef(0);
-
-    // Pixels per second
-    const SPEED = 150;
-
-    const velocityRef = useRef(-SPEED);
-    const targetVelocityRef = useRef(-SPEED);
-
-    const animationRef = useRef<number | null>(null);
 
     useEffect(() => {
         const track = trackRef.current;
-        if (!track) return;
+        if (!track || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-        let lastScrollY = window.scrollY;
-        let lastTime: number | null = null;
+        const SPEED = 150;
+        let pos = 0;
+        let vel = -SPEED;
+        let target = -SPEED;
+        let last = 0;
+        let raf = 0;
+        let width = track.scrollWidth / 3;
+        let lastY = window.scrollY;
 
-        const handleScroll = () => {
-            const currentScrollY = window.scrollY;
-
-            if (currentScrollY > lastScrollY) {
-                // Scroll down → marquee goes LEFT
-                targetVelocityRef.current = -SPEED;
-            } else if (currentScrollY < lastScrollY) {
-                // Scroll up → marquee goes RIGHT
-                targetVelocityRef.current = SPEED;
-            }
-
-            lastScrollY = currentScrollY;
+        const onScroll = () => {
+            const y = window.scrollY;
+            if (y > lastY) target = -SPEED;
+            else if (y < lastY) target = SPEED;
+            lastY = y;
         };
 
-        const animate = (timestamp: number) => {
-            if (lastTime === null) {
-                lastTime = timestamp;
-            }
-
-            const delta = Math.min(timestamp - lastTime, 32);
-            lastTime = timestamp;
-
-            // Smoothly accelerate toward the new direction.
-            velocityRef.current +=
-                (targetVelocityRef.current - velocityRef.current) * 0.12;
-
-            positionRef.current +=
-                velocityRef.current * (delta / 1000);
-
-            const width = track.scrollWidth / 3;
-
-            // Infinite loop — works in both directions.
-            if (positionRef.current <= -width) {
-                positionRef.current += width;
-            }
-
-            if (positionRef.current >= 0) {
-                positionRef.current -= width;
-            }
-
-            track.style.transform = `translate3d(${positionRef.current}px, 0, 0)`;
-
-            animationRef.current = requestAnimationFrame(animate);
+        const tick = (t: number) => {
+            const dt = Math.min(t - last, 32) / 1000;
+            last = t;
+            vel += (target - vel) * (1 - Math.exp(-dt * 7.7)); // frame-rate independent
+            pos += vel * dt;
+            if (pos <= -width) pos += width;
+            else if (pos >= 0) pos -= width;
+            track.style.transform = `translate3d(${pos}px,0,0)`;
+            raf = requestAnimationFrame(tick);
         };
 
-        window.addEventListener("scroll", handleScroll, {
-            passive: true,
+        const io = new IntersectionObserver(([e]) => {
+            cancelAnimationFrame(raf);
+            if (e.isIntersecting) {
+                last = performance.now();
+                raf = requestAnimationFrame(tick);
+            }
         });
 
-        animationRef.current = requestAnimationFrame(animate);
+        const ro = new ResizeObserver(() => {
+            if (track) width = track.scrollWidth / 3;
+        });
+
+        io.observe(track);
+        ro.observe(track);
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        // Initial start
+        last = performance.now();
+        raf = requestAnimationFrame(tick);
 
         return () => {
-            window.removeEventListener("scroll", handleScroll);
-
-            if (animationRef.current !== null) {
-                cancelAnimationFrame(animationRef.current);
-            }
+            cancelAnimationFrame(raf);
+            io.disconnect();
+            ro.disconnect();
+            window.removeEventListener("scroll", onScroll);
         };
     }, []);
 
     return (
         <div
-            aria-hidden={ariaHidden || undefined}
-            className="flex min-w-full shrink-0 overflow-hidden"
+            className="flex select-none overflow-hidden py-4 md:py-8"
+            style={MARQUEE_STYLE}
+            aria-label="You are not broken. You may simply be working at the wrong level."
         >
-            <div
-                ref={trackRef}
-                className="flex shrink-0 items-center will-change-transform"
-            >
-                {[0, 1, 2].map((n) => (
-                    <div
-                        key={n}
-                        className="flex shrink-0 items-center"
-                    >
-                        <span className="whitespace-nowrap font-serif text-xl tracking-tight text-[#3B3C39] sm:text-2xl lg:text-4xl">
-                            You are not broken. You may simply be working at the
-                            wrong level.
-                        </span>
-
-                        <Image
-                            src="/svg/star.svg"
-                            alt=""
-                            width={36}
-                            height={36}
-                            className="mx-4 h-6 w-6 shrink-0 animate-[spin_8s_linear_infinite] sm:mx-7 sm:h-8 sm:w-8 lg:mx-10 lg:h-12 lg:w-12"
-                        />
-                    </div>
-                ))}
+            <div className="flex min-w-full shrink-0 overflow-hidden">
+                <div ref={trackRef} className="flex shrink-0 items-center will-change-transform">
+                    {[0, 1, 2].map((n) => (
+                        <div key={n} className="flex shrink-0 items-center">
+                            <span className="whitespace-nowrap font-serif text-xl tracking-tight text-[#3B3C39] sm:text-2xl lg:text-4xl">
+                                You are not broken. You may simply be working at the wrong level.
+                            </span>
+                            <Image
+                                src="/svg/star.svg"
+                                alt=""
+                                width={36}
+                                height={36}
+                                className="mx-4 h-6 w-6 shrink-0 animate-[spin_8s_linear_infinite] sm:mx-7 sm:h-8 sm:w-8 lg:mx-10 lg:h-12 lg:w-12"
+                            />
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );
-}
+});
