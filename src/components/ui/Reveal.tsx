@@ -1,14 +1,14 @@
 "use client";
 
-import { ReactNode, useEffect, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ReactNode, useRef } from "react";
+import { gsap, NO_REDUCED_MOTION, useGSAP } from "@/lib/gsap";
 
 type RevealProps = {
     children: ReactNode;
     className?: string;
     delay?: number;
     y?: number;
+    variant?: "rise" | "mask";
 };
 
 export default function Reveal({
@@ -16,39 +16,57 @@ export default function Reveal({
     className = "",
     delay = 0,
     y = 40,
+    variant = "rise",
 }: RevealProps) {
     const ref = useRef<HTMLDivElement>(null);
 
-    useEffect(() => {
-        gsap.registerPlugin(ScrollTrigger);
+    useGSAP(
+        () => {
+            const el = ref.current;
+            if (!el) return;
 
-        const el = ref.current;
-        if (!el) return;
+            const mm = gsap.matchMedia();
+            mm.add(NO_REDUCED_MOTION, () => {
+                const scrollTrigger = {
+                    trigger: el,
+                    start: "top 88%",
+                    once: true,
+                };
 
-        const mm = gsap.matchMedia();
-        mm.add("(prefers-reduced-motion: no-preference)", () => {
-            gsap.fromTo(
-                el,
-                { y, opacity: 0, filter: "blur(6px)" },
-                {
-                    y: 0,
-                    opacity: 1,
-                    filter: "blur(0px)",
-                    duration: 1.1,
-                    delay,
-                    ease: "power3.out",
-                    clearProps: "filter",
-                    scrollTrigger: {
-                        trigger: el,
-                        start: "top 88%",
-                        once: true,
+                if (variant === "mask") {
+                    gsap.fromTo(
+                        el,
+                        { clipPath: "inset(100% 0% 0% 0%)", y: y * 0.5 },
+                        {
+                            clipPath: "inset(0% 0% 0% 0%)",
+                            y: 0,
+                            duration: 1.3,
+                            delay,
+                            ease: "power4.out",
+                            clearProps: "clipPath,transform",
+                            scrollTrigger,
+                        },
+                    );
+                    return;
+                }
+
+                gsap.fromTo(
+                    el,
+                    { y, opacity: 0 },
+                    {
+                        y: 0,
+                        opacity: 1,
+                        duration: 1.1,
+                        delay,
+                        ease: "power3.out",
+                        clearProps: "transform,opacity",
+                        scrollTrigger,
                     },
-                },
-            );
-        });
-
-        return () => mm.revert();
-    }, [delay, y]);
+                );
+            });
+        },
+        { scope: ref, dependencies: [delay, y, variant] },
+    );
 
     return (
         <div ref={ref} className={className}>

@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { gsap, prefersReducedMotion, useGSAP } from "@/lib/gsap";
+import Ambient from "@/components/ui/Ambient";
 
 const TESTIMONIALS = [
     {
@@ -39,16 +41,76 @@ const TESTIMONIALS = [
 const EASE = "ease-[cubic-bezier(.22,1,.36,1)]";
 const INTERVAL = 5000;
 
-const REVEAL =
-    `transition-[opacity,transform,filter] duration-700 motion-reduce:transition-none ${EASE} ` +
-    "opacity-0 translate-y-5 blur-sm " +
-    "group-data-[active=true]:opacity-100 group-data-[active=true]:translate-y-0 group-data-[active=true]:blur-none " +
-    "group-data-[active=true]:duration-1200 group-data-[active=true]:delay-(--d)";
-
-const d = (ms: number) => ({ "--d": `${ms}ms` }) as React.CSSProperties;
+const PART_DELAYS = [0, 0.12, 0.24, 0.4, 0.52];
 
 export default function Testimonials() {
     const [active, setActive] = useState(0);
+    const sectionRef = useRef<HTMLElement>(null);
+    const figureRefs = useRef<(HTMLElement | null)[]>([]);
+    const prevActive = useRef(0);
+
+    useGSAP(
+        () => {
+            if (prevActive.current === active) return;
+            prevActive.current = active;
+
+            const incoming = figureRefs.current[active];
+            if (!incoming) return;
+
+            const reduce = prefersReducedMotion();
+            const parts = Array.from(
+                incoming.querySelectorAll<HTMLElement>("[data-part]"),
+            );
+            const avatar = parts[0];
+            const line = parts[3];
+            const rest = parts.filter((_, i) => i !== 0 && i !== 3);
+            const outgoing = figureRefs.current.filter(
+                (f, i) => f && i !== active,
+            );
+
+            if (reduce) {
+                gsap.set(outgoing, { autoAlpha: 0 });
+                gsap.set(incoming, { autoAlpha: 1 });
+                gsap.set(parts, { clearProps: "all" });
+                return;
+            }
+
+            const tl = gsap.timeline();
+
+            // Out: everything else fades away.
+            tl.to(outgoing, {
+                autoAlpha: 0,
+                duration: 0.5,
+                ease: "power2.in",
+                overwrite: "auto",
+            });
+
+            // In: show the figure, then sequence its parts.
+            tl.set(incoming, { autoAlpha: 1 }, 0.2);
+            tl.fromTo(
+                avatar,
+                { autoAlpha: 0, scale: 0.9 },
+                { autoAlpha: 1, scale: 1, duration: 1.2, ease: "power3.out" },
+                0.2 + PART_DELAYS[0],
+            );
+            rest.forEach((el, i) => {
+                const delay = PART_DELAYS[[1, 2, 4][i]];
+                tl.fromTo(
+                    el,
+                    { autoAlpha: 0, y: 20 },
+                    { autoAlpha: 1, y: 0, duration: 1.2, ease: "power3.out" },
+                    0.2 + delay,
+                );
+            });
+            tl.fromTo(
+                line,
+                { autoAlpha: 0, scaleX: 0 },
+                { autoAlpha: 1, scaleX: 1, duration: 1.2, ease: "power3.out" },
+                0.2 + PART_DELAYS[3],
+            );
+        },
+        { scope: sectionRef, dependencies: [active] },
+    );
 
     useEffect(() => {
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -64,6 +126,7 @@ export default function Testimonials() {
 
     return (
         <section
+            ref={sectionRef}
             className="relative w-full overflow-hidden rounded-t-4xl text-white sm:rounded-t-[48px] lg:rounded-t-[64px]"
             style={{
                 background: `
@@ -85,13 +148,22 @@ export default function Testimonials() {
                     {TESTIMONIALS.map((t, i) => (
                         <figure
                             key={t.id}
+                            ref={(el) => {
+                                figureRefs.current[i] = el;
+                            }}
                             data-active={active === i}
                             aria-hidden={active !== i}
-                            className="group col-start-1 row-start-1 flex min-w-0 flex-col items-center text-center data-[active=false]:pointer-events-none"
+                            style={
+                                i === 0
+                                    ? undefined
+                                    : { opacity: 0, visibility: "hidden" }
+                            }
+                            className="col-start-1 row-start-1 flex min-w-0 flex-col items-center text-center data-[active=false]:pointer-events-none"
                         >
-                            <span
-                                style={d(0)}
-                                className={`relative h-16 w-16 scale-90 overflow-hidden rounded-full border border-white/70 group-data-[active=true]:scale-100 ${REVEAL}`}
+                            <Ambient
+                                variant="float"
+                                data-part
+                                className="relative h-16 w-16 overflow-hidden rounded-full border border-white/70"
                             >
                                 <Image
                                     src={t.avatar}
@@ -100,26 +172,26 @@ export default function Testimonials() {
                                     sizes="64px"
                                     className="object-cover"
                                 />
-                            </span>
+                            </Ambient>
 
-                            <Stars style={d(120)} />
+                            <Stars />
 
                             <blockquote
-                                style={d(240)}
-                                className={`mt-4 w-full max-w-md text-balance break-words text-xl font-light leading-snug sm:text-2xl ${REVEAL}`}
+                                data-part
+                                className="mt-4 w-full max-w-md text-balance break-words text-xl font-light leading-snug sm:text-2xl"
                             >
                                 &ldquo;{t.quote}&rdquo;
                             </blockquote>
 
                             <span
                                 aria-hidden
-                                style={d(400)}
-                                className={`mt-3 h-0.5 w-full max-w-xs scale-x-0 bg-linear-to-r from-transparent via-white/40 to-transparent group-data-[active=true]:scale-x-100 sm:max-w-sm ${REVEAL}`}
+                                data-part
+                                className="mt-3 h-0.5 w-full max-w-xs bg-linear-to-r from-transparent via-white/40 to-transparent sm:max-w-sm"
                             />
 
                             <figcaption
-                                style={d(520)}
-                                className={`mt-3 text-base text-white/80 ${REVEAL}`}
+                                data-part
+                                className="mt-3 text-base text-white/80"
                             >
                                 {t.name}
                             </figcaption>
@@ -141,8 +213,8 @@ export default function Testimonials() {
                             aria-label={`Testimonial from ${t.name}`}
                             onClick={() => setActive(i)}
                             className={`h-2 rounded-full outline-none transition-[width,background-color] duration-500 focus-visible:ring-2 focus-visible:ring-[#E8E39A]/70 motion-reduce:transition-none ${EASE} ${active === i
-                                    ? "w-6 bg-white"
-                                    : "w-2 bg-white/40 hover:bg-white/70"
+                                ? "w-6 bg-white"
+                                : "w-2 bg-white/40 hover:bg-white/70"
                                 }`}
                         />
                     ))}
@@ -152,13 +224,13 @@ export default function Testimonials() {
     );
 }
 
-function Stars({ style }: { style: React.CSSProperties }) {
+function Stars() {
     return (
         <span
             role="img"
             aria-label="5 out of 5 stars"
-            style={style}
-            className={`mt-3 flex gap-1 text-[#F5A511] ${REVEAL}`}
+            data-part
+            className="mt-3 flex gap-1 text-[#F5A511]"
         >
             {[0, 1, 2, 3, 4].map((n) => (
                 <svg

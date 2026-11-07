@@ -1,10 +1,63 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 import Reveal from "@/components/ui/Reveal";
+import Ambient from "@/components/ui/Ambient";
+import { gsap, NO_REDUCED_MOTION, useGSAP } from "@/lib/gsap";
 
 export default function FinalCta() {
+    const sectionRef = useRef<HTMLElement>(null);
+
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+            mm.add(NO_REDUCED_MOTION, () => {
+                const tl = gsap.timeline({
+                    defaults: { ease: "power3.out" },
+                    scrollTrigger: {
+                        trigger: sectionRef.current,
+                        start: "top 70%",
+                        once: true,
+                    },
+                });
+
+                tl.from("[data-arch='left']", {
+                    scale: 0.8,
+                    opacity: 0,
+                    y: -30,
+                    duration: 1.3,
+                    transformOrigin: "0% 0%",
+                    clearProps: "opacity,transform",
+                })
+                    .from(
+                        "[data-arch='right']",
+                        {
+                            scale: 0.8,
+                            opacity: 0,
+                            y: 30,
+                            duration: 1.3,
+                            transformOrigin: "100% 100%",
+                            clearProps: "opacity,transform",
+                        },
+                        0.15,
+                    )
+                    .from(
+                        "[data-arch] img",
+                        { scale: 1.25, duration: 1.8, ease: "power2.out" },
+                        0,
+                    );
+            });
+        },
+        { scope: sectionRef },
+    );
+
     return (
-        <section className="w-full bg-[#F4F2EE] px-3 pb-3 sm:px-4 sm:pb-4">
+        <section
+            ref={sectionRef}
+            className="w-full bg-[#F4F2EE] px-3 pb-3 sm:px-4 sm:pb-4"
+        >
             <div
                 className="relative mx-auto flex min-h-130 w-full max-w-350 items-center justify-center overflow-hidden rounded-4xl px-5 py-40 text-center text-white sm:rounded-[48px] sm:px-6 sm:py-52 md:py-20 lg:min-h-160"
                 style={{
@@ -15,8 +68,11 @@ export default function FinalCta() {
                     `,
                 }}
             >
-                {/* top-left arch (now visible on every screen size) */}
-                <div className="absolute left-3 top-3 h-32 w-28 overflow-hidden rounded-t-2xl rounded-b-[56px] sm:h-44 sm:w-36 sm:rounded-t-3xl sm:rounded-b-[72px] md:h-60 md:w-51.25 md:rounded-t-4xl md:rounded-b-[100px] lg:left-4 lg:top-4 lg:h-82 lg:w-70">
+                {/* top-left arch */}
+                <div
+                    data-arch="left"
+                    className="absolute left-3 top-3 h-32 w-28 overflow-hidden rounded-t-2xl rounded-b-[56px] sm:h-44 sm:w-36 sm:rounded-t-3xl sm:rounded-b-[72px] md:h-60 md:w-51.25 md:rounded-t-4xl md:rounded-b-[100px] lg:left-4 lg:top-4 lg:h-82 lg:w-70"
+                >
                     <Image
                         src="/image/cta-left.webp"
                         alt="Lina standing behind a calm client with her hands raised"
@@ -27,7 +83,10 @@ export default function FinalCta() {
                 </div>
 
                 {/* bottom-right arch */}
-                <div className="absolute bottom-3 right-3 h-32 w-28 overflow-hidden rounded-t-[56px] rounded-b-2xl sm:h-44 sm:w-36 sm:rounded-t-[72px] sm:rounded-b-3xl md:h-60 md:w-51.25 md:rounded-t-[100px] md:rounded-b-4xl lg:bottom-4 lg:right-4 lg:h-82 lg:w-70">
+                <div
+                    data-arch="right"
+                    className="absolute bottom-3 right-3 h-32 w-28 overflow-hidden rounded-t-[56px] rounded-b-2xl sm:h-44 sm:w-36 sm:rounded-t-[72px] sm:rounded-b-3xl md:h-60 md:w-51.25 md:rounded-t-[100px] md:rounded-b-4xl lg:bottom-4 lg:right-4 lg:h-82 lg:w-70"
+                >
                     <Image
                         src="/image/cta-right.webp"
                         alt="Client resting with closed eyes as a therapist's hands hover above her"
@@ -38,7 +97,10 @@ export default function FinalCta() {
                 </div>
 
                 <Reveal className="relative flex max-w-lg flex-col items-center md:max-w-md lg:max-w-lg">
-                    <div className="flex h-24 w-24 items-center justify-center sm:h-34 sm:w-34">
+                    <Ambient
+                        variant="sway"
+                        className="flex h-24 w-24 items-center justify-center sm:h-34 sm:w-34"
+                    >
                         <Image
                             src="/svg/pendulum-rings.svg"
                             alt=""
@@ -46,7 +108,7 @@ export default function FinalCta() {
                             height={136}
                             className="h-full w-full object-contain"
                         />
-                    </div>
+                    </Ambient>
 
                     <h2 className="mt-5 font-serif text-3xl italic leading-[1.1] tracking-tight text-balance sm:text-4xl md:text-5xl">
                         You don&apos;t have to keep fighting the same pattern.
@@ -70,3 +132,4 @@ export default function FinalCta() {
         </section>
     );
 }
+

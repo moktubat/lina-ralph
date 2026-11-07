@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import Image from "next/image";
-import gsap from "gsap";
+import { gsap, NO_REDUCED_MOTION, useGSAP } from "@/lib/gsap";
 
 const IMAGES = [
     {
@@ -91,76 +91,123 @@ function getClipPath(phi: number, cx: number, w: number, h: number): string {
         .join(", ")})`;
 }
 
+const FULL = "inset(0)";
+const NONE = "inset(0 100% 0 0)";
+
+// (parallax) without ever exposing an edge.
+const IMG_SCALE = 1.08;
+const PARALLAX = 0.035;
+
+function clipFor(phi: number, cx: number, w: number, h: number): string {
+    const ext = Math.abs(Math.cos(phi)) * (w / 2) + Math.abs(Math.sin(phi)) * (h / 2);
+    if (cx + ext < 0) return FULL;
+    if (cx - ext >= 0) return NONE;
+    return getClipPath(phi, cx, w, h);
+}
+
 export default function Transformation() {
     const galleryRef = useRef<HTMLDivElement>(null);
     const ringRef = useRef<HTMLDivElement>(null);
     const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
     const afterRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-    useEffect(() => {
-        const gallery = galleryRef.current;
-        const ring = ringRef.current;
-        if (!gallery || !ring) return;
+    useGSAP(
+        () => {
+            const gallery = galleryRef.current;
+            const ring = ringRef.current;
+            if (!gallery || !ring) return;
 
-        const state = { rotation: 0, radius: getRadius(), w: 0, h: 0 };
+            // Looked up once, not per frame.
+            const afters = afterRefs.current;
+            const beforeImgs = cardRefs.current.map(
+                (c) => c?.querySelector<HTMLImageElement>(":scope > img") ?? null,
+            );
+            const afterImgs = afters.map(
+                (a) => a?.querySelector<HTMLImageElement>("img") ?? null,
+            );
+            const lastClip: string[] = new Array(CARDS.length).fill("");
+            const lastShift: number[] = new Array(CARDS.length).fill(NaN);
 
-        const update = () => {
-            const { rotation, radius, w, h } = state;
-            if (w === 0 || h === 0) return;
+            const state = { rotation: 0, radius: getRadius(), w: 0, h: 0 };
 
-            for (let i = 0; i < CARDS.length; i++) {
-                const after = afterRefs.current[i];
-                if (!after) continue;
+            const update = () => {
+                const { rotation, radius, w, h } = state;
+                if (w === 0 || h === 0) return;
 
-                const phi = ((CARDS[i].angle + rotation) * Math.PI) / 180;
-                const cx = radius * Math.sin(phi);
-                after.style.clipPath = getClipPath(phi, cx, w, h);
-            }
-        };
+                for (let i = 0; i < CARDS.length; i++) {
+                    const after = afters[i];
+                    if (!after) continue;
 
-        const measure = () => {
-            const first = cardRefs.current[0];
-            if (first) {
-                state.w = first.offsetWidth;
-                state.h = first.offsetHeight;
-            }
-            state.radius = getRadius();
-            gallery.style.setProperty("--r", `${state.radius}px`);
-            update();
-        };
+                    const phi = ((CARDS[i].angle + rotation) * Math.PI) / 180;
+                    const sin = Math.sin(phi);
+                    const cx = radius * sin;
 
-        measure();
-        const ro = new ResizeObserver(measure);
-        ro.observe(gallery);
+                    const clip = clipFor(phi, cx, w, h);
+                    if (clip !== lastClip[i]) {
+                        after.style.clipPath = clip;
+                        lastClip[i] = clip;
+                    }
 
-        let tween: gsap.core.Tween | undefined;
-        const mm = gsap.matchMedia();
-        mm.add("(prefers-reduced-motion: no-preference)", () => {
-            tween = gsap.to(state, {
-                rotation: -360,
-                duration: ROTATION_DURATION,
-                ease: "none",
-                repeat: -1,
-                onUpdate: () => {
-                    gsap.set(ring, { rotation: state.rotation });
-                    update();
-                },
+                    const shift = Math.round(sin * w * PARALLAX * 10) / 10;
+                    if (shift !== lastShift[i]) {
+                        lastShift[i] = shift;
+                        const t = `translate3d(${shift}px,0,0) scale(${IMG_SCALE})`;
+                        const b = beforeImgs[i];
+                        const a = afterImgs[i];
+                        if (b) b.style.transform = t;
+                        if (a) a.style.transform = t;
+                    }
+                }
+            };
+
+            const measure = () => {
+                const first = cardRefs.current[0];
+                if (first) {
+                    state.w = first.offsetWidth;
+                    state.h = first.offsetHeight;
+                }
+                state.radius = getRadius();
+                gallery.style.setProperty("--r", `${state.radius}px`);
+                lastClip.fill("");
+                lastShift.fill(NaN);
+                update();
+            };
+
+            measure();
+            const ro = new ResizeObserver(measure);
+            ro.observe(gallery);
+
+            const setRingRotation = gsap.quickSetter(ring, "rotation", "deg");
+
+            let tween: gsap.core.Tween | undefined;
+            const mm = gsap.matchMedia();
+            mm.add(NO_REDUCED_MOTION, () => {
+                tween = gsap.to(state, {
+                    rotation: -360,
+                    duration: ROTATION_DURATION,
+                    ease: "none",
+                    repeat: -1,
+                    onUpdate: () => {
+                        setRingRotation(state.rotation);
+                        update();
+                    },
+                });
+                return () => tween?.kill();
             });
-            return () => tween?.kill();
-        });
 
-        const io = new IntersectionObserver(
-            ([e]) => (e.isIntersecting ? tween?.resume() : tween?.pause()),
-            { rootMargin: "100px" },
-        );
-        io.observe(gallery);
+            const io = new IntersectionObserver(
+                ([e]) => (e.isIntersecting ? tween?.resume() : tween?.pause()),
+                { rootMargin: "100px" },
+            );
+            io.observe(gallery);
 
-        return () => {
-            ro.disconnect();
-            io.disconnect();
-            mm.revert();
-        };
-    }, []);
+            return () => {
+                ro.disconnect();
+                io.disconnect();
+            };
+        },
+        { scope: galleryRef },
+    );
 
     return (
         <section
@@ -234,7 +281,7 @@ export default function Transformation() {
                                 ref={(el) => {
                                     afterRefs.current[index] = el;
                                 }}
-                                className="absolute inset-0"
+                                className="absolute inset-0 will-change-[clip-path]"
                                 style={{ clipPath: "inset(0 100% 0 0)" }}
                             >
                                 <Image
@@ -280,3 +327,4 @@ export default function Transformation() {
         </section>
     );
 }
+

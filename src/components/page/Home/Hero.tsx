@@ -2,9 +2,9 @@
 
 import { useRef } from "react";
 import Image from "next/image";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
+import { gsap, NO_REDUCED_MOTION, SplitText, useGSAP } from "@/lib/gsap";
 import Button from "@/components/ui/Button";
+import Ambient from "@/components/ui/Ambient";
 
 export default function Hero() {
     const sectionRef = useRef<HTMLElement>(null);
@@ -15,12 +15,18 @@ export default function Hero() {
         () => {
             const mm = gsap.matchMedia();
 
-            mm.add("(prefers-reduced-motion: no-preference)", () => {
-                gsap.from(headlineRef.current, {
-                    y: 40,
-                    opacity: 0,
-                    duration: 1,
-                    ease: "power3.out",
+            mm.add(NO_REDUCED_MOTION, () => {
+                SplitText.create(headlineRef.current, {
+                    type: "words,chars",
+                    autoSplit: true,
+                    onSplit: (self) =>
+                        gsap.from(self.chars, {
+                            y: 40,
+                            opacity: 0,
+                            duration: 0.9,
+                            ease: "power3.out",
+                            stagger: 0.018,
+                        }),
                 });
 
                 gsap.from(cardRef.current, {
@@ -30,9 +36,23 @@ export default function Hero() {
                     delay: 0.3,
                     ease: "power3.out",
                 });
-            });
 
-            return () => mm.revert();
+                gsap.fromTo(
+                    "[data-hero-bg]",
+                    { yPercent: 0, scale: 1, transformOrigin: "50% 100%" },
+                    {
+                        yPercent: 10,
+                        scale: 1.12,
+                        ease: "none",
+                        scrollTrigger: {
+                            trigger: sectionRef.current,
+                            start: "top top",
+                            end: "bottom top",
+                            scrub: true,
+                        },
+                    },
+                );
+            });
         },
         { scope: sectionRef }
     );
@@ -47,7 +67,8 @@ export default function Hero() {
                 alt="Client receiving a calming hypnotherapy session"
                 fill
                 priority
-                className="-z-10 object-cover object-center"
+                data-hero-bg
+                className="-z-10 object-cover object-center will-change-transform"
             />
 
             <div className="absolute inset-0 -z-10 bg-black/20" />
@@ -77,14 +98,17 @@ export default function Hero() {
                     </p>
 
                     <div className="mb-6 flex items-center gap-3">
-                        <span className="relative h-10 w-10 overflow-hidden rounded-full border border-white">
+                        <Ambient
+                            variant="float"
+                            className="relative h-10 w-10 overflow-hidden rounded-full border border-white"
+                        >
                             <Image
                                 src="/image/avatar-sara.png"
                                 alt=""
                                 fill
                                 className="object-cover"
                             />
-                        </span>
+                        </Ambient>
 
                         <span className="text-sm font-medium">
                             Sara Staphen
@@ -126,3 +150,4 @@ function MoonIcon() {
         </svg>
     );
 }
+

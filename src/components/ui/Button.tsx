@@ -2,8 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ButtonHTMLAttributes, MouseEventHandler, ReactNode } from "react";
+import {
+    ButtonHTMLAttributes,
+    MouseEventHandler,
+    ReactNode,
+    useRef,
+} from "react";
 import { useAnchorScroll } from "@/components/providers/SmoothScrollProvider";
+import { FINE_POINTER, gsap, NO_REDUCED_MOTION, useGSAP } from "@/lib/gsap";
 
 type ButtonProps = {
     children: ReactNode;
@@ -13,6 +19,8 @@ type ButtonProps = {
     className?: string;
     onClick?: MouseEventHandler<HTMLElement>;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">;
+
+const MAGNET_MAX = 10; // px
 
 const PRIMARY_BG = `
     radial-gradient(at 0% 0%, #FF9C00 0%, transparent 50%),
@@ -32,6 +40,46 @@ export default function Button({
     ...props
 }: ButtonProps) {
     const scrollToAnchor = useAnchorScroll();
+    const ref = useRef<HTMLElement>(null);
+
+    useGSAP(
+        () => {
+            const el = ref.current;
+            if (!el || variant !== "primary") return;
+
+            const mm = gsap.matchMedia();
+            mm.add(`${NO_REDUCED_MOTION} and ${FINE_POINTER}`, () => {
+                const move = (e: PointerEvent) => {
+                    const r = el.getBoundingClientRect();
+                    const dx = (e.clientX - (r.left + r.width / 2)) / (r.width / 2);
+                    const dy = (e.clientY - (r.top + r.height / 2)) / (r.height / 2);
+                    gsap.to(el, {
+                        x: gsap.utils.clamp(-1, 1, dx) * MAGNET_MAX,
+                        y: gsap.utils.clamp(-1, 1, dy) * MAGNET_MAX,
+                        duration: 0.4,
+                        ease: "power3.out",
+                        overwrite: "auto",
+                    });
+                };
+                const reset = () =>
+                    gsap.to(el, {
+                        x: 0,
+                        y: 0,
+                        duration: 0.8,
+                        ease: "elastic.out(1, 0.4)",
+                        overwrite: "auto",
+                    });
+
+                el.addEventListener("pointermove", move);
+                el.addEventListener("pointerleave", reset);
+                return () => {
+                    el.removeEventListener("pointermove", move);
+                    el.removeEventListener("pointerleave", reset);
+                };
+            });
+        },
+        { scope: ref, dependencies: [variant] },
+    );
 
     const base =
         "inline-flex w-full sm:w-auto items-center justify-between gap-3 rounded-md text-sm py-1";
@@ -66,6 +114,7 @@ export default function Button({
     if (href) {
         return (
             <Link
+                ref={ref as React.Ref<HTMLAnchorElement>}
                 href={href}
                 className={classes}
                 style={style}
@@ -83,6 +132,7 @@ export default function Button({
 
     return (
         <button
+            ref={ref as React.Ref<HTMLButtonElement>}
             className={classes}
             style={style}
             onClick={onClick}
@@ -92,3 +142,4 @@ export default function Button({
         </button>
     );
 }
+

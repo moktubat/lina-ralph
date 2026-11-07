@@ -9,9 +9,8 @@ import {
     useEffect,
     useSyncExternalStore,
 } from "react";
-import gsap from "gsap";
 import Lenis from "lenis";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { gsap, ScrollTrigger } from "@/lib/gsap";
 
 let current: Lenis | null = null;
 const listeners = new Set<() => void>();
@@ -67,8 +66,6 @@ export default function SmoothScrollProvider({ children }: { children: ReactNode
         if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             return;
         }
-
-        gsap.registerPlugin(ScrollTrigger);
 
         const instance = new Lenis({
             duration: 1.3,

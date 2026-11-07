@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Reveal from "@/components/ui/Reveal";
+import Ambient from "@/components/ui/Ambient";
 
 export default function About() {
     return (
@@ -13,9 +14,10 @@ export default function About() {
                     </h2>
                 </Reveal>
 
-                {/* Image: short on phones, full height from md up */}
+                {/* Image */}
                 <Reveal
                     delay={0.12}
+                    variant="mask"
                     className="mx-auto w-full max-w-101.5 md:col-span-1 md:mx-0 lg:col-span-1"
                 >
                     <div className="relative h-90 w-full overflow-hidden rounded-2xl sm:h-110 md:h-155">
@@ -34,7 +36,10 @@ export default function About() {
                     delay={0.24}
                     className="flex w-full max-w-101.5 flex-col gap-6 md:col-span-1 md:col-start-2 md:row-start-2 md:justify-end md:gap-10 lg:col-span-1 lg:col-start-3 lg:row-start-1"
                 >
-                    <div className="flex h-16 w-16 items-center justify-center sm:h-24 sm:w-24">
+                    <Ambient
+                        variant="sway"
+                        className="flex h-16 w-16 items-center justify-center sm:h-24 sm:w-24"
+                    >
                         <Image
                             src="/svg/spiral-head.svg"
                             alt=""
@@ -42,7 +47,7 @@ export default function About() {
                             height={96}
                             className="h-full w-full object-contain"
                         />
-                    </div>
+                    </Ambient>
 
                     <p className="text-sm leading-relaxed text-[#1C1B17]/80 sm:text-base">
                         Lina is a hypnotherapist who brings presence, clarity,

@@ -1,9 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import {
+    gsap,
+    NO_REDUCED_MOTION,
+    prefersReducedMotion,
+    ScrollTrigger,
+    useGSAP,
+} from "@/lib/gsap";
 import { useLenis } from "@/components/providers/SmoothScrollProvider";
 
 const ITEMS = [
@@ -49,36 +54,40 @@ const ITEMS = [
 ];
 
 const EASE = "ease-[cubic-bezier(.22,1,.36,1)]";
+const GSAP_EASE = "power4.out";
+const PENDULUM_PIVOT = "50% 0%";
 
 export default function DeeperPattern() {
     const [active, setActive] = useState(0);
     const sectionRef = useRef<HTMLElement>(null);
     const pinTriggerRef = useRef<ScrollTrigger | null>(null);
+    const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
+    const quoteListRefs = useRef<(HTMLUListElement | null)[]>([]);
+    const pendulumRef = useRef<HTMLImageElement | null>(null);
+    const prevActive = useRef(0);
     const lenis = useLenis();
 
-    useEffect(() => {
-        gsap.registerPlugin(ScrollTrigger);
+    useGSAP(
+        () => {
+            const section = sectionRef.current;
+            if (!section) return;
 
-        const section = sectionRef.current;
-        if (!section) return;
+            const onUpdate = (self: ScrollTrigger) => {
+                const i = Math.min(
+                    ITEMS.length - 1,
+                    Math.floor(self.progress * ITEMS.length),
+                );
+                setActive((prev) => (prev === i ? prev : i));
 
-        const onUpdate = (self: ScrollTrigger) => {
-            const i = Math.min(
-                ITEMS.length - 1,
-                Math.floor(self.progress * ITEMS.length),
-            );
-            setActive((prev) => (prev === i ? prev : i));
-        };
+                const drift = (self.progress - 0.5) * 6;
+                gsap.set(imageRefs.current.filter(Boolean), { yPercent: drift });
+            };
 
-        const mm = gsap.matchMedia();
+            const mm = gsap.matchMedia();
 
-        // Desktop: pin the section and switch tabs while scrolling.
-        mm.add(
-            "(prefers-reduced-motion: no-preference) and (min-width: 1024px)",
-            () => {
+            mm.add(`${NO_REDUCED_MOTION} and (min-width: 1024px)`, () => {
                 const st = ScrollTrigger.create({
                     trigger: section,
-                    // If the section is taller than the viewport, pin once its bottom is visible.
                     start: () =>
                         section.offsetHeight <= window.innerHeight
                             ? "top top"
@@ -95,13 +104,9 @@ export default function DeeperPattern() {
                     st.kill();
                     pinTriggerRef.current = null;
                 };
-            },
-        );
+            });
 
-        // Mobile / tablet: no pin, tabs follow scroll progress through the section.
-        mm.add(
-            "(prefers-reduced-motion: no-preference) and (max-width: 1023px)",
-            () => {
+            mm.add(`${NO_REDUCED_MOTION} and (max-width: 1023px)`, () => {
                 const st = ScrollTrigger.create({
                     trigger: section,
                     start: "top 45%",
@@ -110,13 +115,83 @@ export default function DeeperPattern() {
                 });
 
                 return () => st.kill();
-            },
-        );
+            });
+        },
+        { scope: sectionRef },
+    );
 
-        return () => mm.revert();
-    }, []);
+    useGSAP(
+        () => {
+            const changed = prevActive.current !== active;
+            prevActive.current = active;
 
-    // Clicking a tab: on desktop scroll to that step, otherwise just switch.
+            const reduce = prefersReducedMotion();
+            const d = reduce ? 0 : 0.7;
+
+            if (changed) animateContent(d, reduce);
+            if (!reduce) animatePendulum(changed);
+
+            function animateContent(d: number, reduce: boolean) {
+                imageRefs.current.forEach((img, i) => {
+                    if (!img) return;
+                    gsap.to(img, {
+                        opacity: i === active ? 1 : 0,
+                        scale: i === active ? 1.06 : 1.1,
+                        duration: d,
+                        ease: GSAP_EASE,
+                        overwrite: "auto",
+                    });
+                });
+
+                quoteListRefs.current.forEach((ul, i) => {
+                    if (!ul) return;
+                    const items = ul.children;
+                    if (i === active) {
+                        gsap.to(items, {
+                            opacity: 1,
+                            y: 0,
+                            duration: d,
+                            delay: reduce ? 0 : 0.15,
+                            stagger: reduce ? 0 : 0.09,
+                            ease: GSAP_EASE,
+                            overwrite: "auto",
+                        });
+                    } else {
+                        gsap.to(items, {
+                            opacity: 0,
+                            y: 8,
+                            duration: reduce ? 0 : 0.35,
+                            ease: "power2.out",
+                            overwrite: "auto",
+                        });
+                    }
+                });
+            }
+
+            function animatePendulum(swingIn: boolean) {
+                const pendulum = pendulumRef.current;
+                if (!pendulum) return;
+                gsap.set(pendulum, { transformOrigin: PENDULUM_PIVOT });
+                const tl = gsap.timeline();
+                if (swingIn) {
+                    tl.fromTo(
+                        pendulum,
+                        { rotation: -16 },
+                        { rotation: 0, duration: 2.8, ease: "elastic.out(1, 0.3)" },
+                    );
+                }
+                tl.to(pendulum, {
+                    rotation: 3,
+                    duration: 3,
+                    ease: "sine.inOut",
+                    yoyo: true,
+                    repeat: -1,
+                });
+            }
+        },
+        { scope: sectionRef, dependencies: [active] },
+    );
+
     const goTo = (i: number) => {
         const st = pinTriggerRef.current;
         if (!st) {
@@ -187,16 +262,20 @@ export default function DeeperPattern() {
                             {ITEMS.map((item, i) => (
                                 <Image
                                     key={item.id}
+                                    ref={(el) => {
+                                        imageRefs.current[i] = el;
+                                    }}
                                     src={item.image}
                                     alt={item.alt}
                                     fill
                                     priority={i === 0}
                                     sizes="(min-width: 1280px) 400px, (min-width: 1024px) 34vw, (min-width: 768px) 50vw, 300px"
                                     aria-hidden={active !== i}
-                                    className={`object-cover object-top transition-[opacity,transform,filter] duration-700 motion-reduce:transition-none ${EASE} ${active === i
-                                        ? "scale-100 opacity-100 blur-0"
-                                        : "scale-105 opacity-0 blur-[2px]"
-                                        }`}
+                                    style={{
+                                        opacity: i === 0 ? 1 : 0,
+                                        transform: `scale(${i === 0 ? 1.06 : 1.1})`,
+                                    }}
+                                    className="object-cover object-top will-change-transform"
                                 />
                             ))}
                         </div>
@@ -207,6 +286,7 @@ export default function DeeperPattern() {
                         <div className="order-2 flex h-20 w-20 shrink-0 items-center justify-center sm:h-24 sm:w-24 md:order-1 md:mt-10 md:h-14 md:w-14 lg:h-32 lg:w-32">
                             <Image
                                 key={ITEMS[active].id}
+                                ref={pendulumRef}
                                 src={ITEMS[active].pendulum}
                                 alt=""
                                 width={128}
@@ -222,22 +302,24 @@ export default function DeeperPattern() {
                             {ITEMS.map((item, i) => (
                                 <ul
                                     key={item.id}
+                                    ref={(el) => {
+                                        quoteListRefs.current[i] = el;
+                                    }}
                                     aria-hidden={active !== i}
                                     className="col-start-1 row-start-1 space-y-1"
                                 >
-                                    {item.quotes.map((quote, q) => (
+                                    {item.quotes.map((quote) => (
                                         <li
                                             key={quote}
-                                            className={`transition-[opacity,transform] duration-700 motion-reduce:transition-none ${EASE} ${active === i
-                                                ? "translate-y-0 opacity-100"
-                                                : "translate-y-2 opacity-0"
-                                                }`}
-                                            style={{
-                                                transitionDelay:
-                                                    active === i
-                                                        ? `${150 + q * 90}ms`
-                                                        : "0ms",
-                                            }}
+                                            style={
+                                                i === 0
+                                                    ? undefined
+                                                    : {
+                                                        opacity: 0,
+                                                        transform:
+                                                            "translateY(8px)",
+                                                    }
+                                            }
                                         >
                                             &ldquo;{quote}&rdquo;
                                         </li>

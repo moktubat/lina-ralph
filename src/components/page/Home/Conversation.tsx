@@ -1,6 +1,10 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
 import { ReactNode } from "react";
 import Button from "@/components/ui/Button";
+import { gsap, NO_REDUCED_MOTION, useGSAP } from "@/lib/gsap";
 
 const STEPS = [
     {
@@ -24,8 +28,75 @@ const STEPS = [
 ];
 
 export default function Conversation() {
+    const sectionRef = useRef<HTMLElement>(null);
+
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+            mm.add(NO_REDUCED_MOTION, () => {
+                gsap.from("[data-conv-head] > *", {
+                    y: 30,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                    stagger: 0.12,
+                    scrollTrigger: {
+                        trigger: "[data-conv-head]",
+                        start: "top 85%",
+                        once: true,
+                    },
+                });
+
+                gsap.from("[data-conv-step]", {
+                    y: 40,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                    stagger: 0.15,
+                    clearProps: "opacity,transform",
+                    scrollTrigger: {
+                        trigger: "[data-conv-steps]",
+                        start: "top 85%",
+                        once: true,
+                    },
+                });
+
+                gsap.from("[data-conv-cta]", {
+                    y: 24,
+                    opacity: 0,
+                    duration: 0.9,
+                    ease: "power3.out",
+                    clearProps: "opacity,transform",
+                    scrollTrigger: {
+                        trigger: "[data-conv-cta]",
+                        start: "top 92%",
+                        once: true,
+                    },
+                });
+
+                gsap.fromTo(
+                    "[data-conv-bg]",
+                    { yPercent: 0, scale: 1, transformOrigin: "50% 100%" },
+                    {
+                        yPercent: 8,
+                        scale: 1.1,
+                        ease: "none",
+                        scrollTrigger: {
+                            trigger: sectionRef.current,
+                            start: "top bottom",
+                            end: "bottom top",
+                            scrub: true,
+                        },
+                    },
+                );
+            });
+        },
+        { scope: sectionRef },
+    );
+
     return (
         <section
+            ref={sectionRef}
             id="contact"
             className="relative w-full overflow-hidden rounded-b-4xl sm:rounded-b-[48px] lg:rounded-b-[64px]"
         >
@@ -34,7 +105,8 @@ export default function Conversation() {
                 alt=""
                 fill
                 sizes="100vw"
-                className="-z-20 object-cover object-bottom"
+                data-conv-bg
+                className="-z-20 object-cover object-bottom will-change-transform"
             />
             {/* Fade from the page background into the photo */}
             <div
@@ -43,7 +115,7 @@ export default function Conversation() {
             />
 
             <div className="mx-auto w-full max-w-7xl px-4 pt-16 pb-12 sm:pt-20 sm:pb-16 lg:pt-24">
-                <div className="mx-auto max-w-xl text-center">
+                <div data-conv-head className="mx-auto max-w-xl text-center">
                     <h2 className="font-serif text-3xl font-medium italic leading-[1.1] tracking-tight text-[#1C1B17] sm:text-4xl md:text-5xl">
                         Simply a conversation.
                     </h2>
@@ -54,9 +126,16 @@ export default function Conversation() {
                     </p>
                 </div>
 
-                <ol className="mt-16 grid gap-6 sm:mt-24 md:grid-cols-3 md:gap-4 lg:mt-40 lg:gap-6">
+                <ol
+                    data-conv-steps
+                    className="mt-16 grid gap-6 sm:mt-24 md:grid-cols-3 md:gap-4 lg:mt-40 lg:gap-6"
+                >
                     {STEPS.map((s) => (
-                        <li key={s.step} className="flex flex-col gap-2 items-start">
+                        <li
+                            key={s.step}
+                            data-conv-step
+                            className="flex flex-col gap-2 items-start"
+                        >
                             <span className="rounded-md bg-[#534131]/80 px-4 py-1.5 text-sm text-white backdrop-blur-md">
                                 {s.step}
                             </span>
@@ -77,7 +156,10 @@ export default function Conversation() {
                     ))}
                 </ol>
 
-                <div className="mt-10 flex justify-center sm:mt-14">
+                <div
+                    data-conv-cta
+                    className="mt-10 flex justify-center sm:mt-14"
+                >
                     <Button
                         variant="primary"
                         href="#contact"
@@ -137,3 +219,4 @@ function CheckIcon() {
         </Icon>
     );
 }
+

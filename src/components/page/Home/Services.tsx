@@ -1,5 +1,14 @@
+"use client";
+
+import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import {
+    FINE_POINTER,
+    gsap,
+    NO_REDUCED_MOTION,
+    useGSAP,
+} from "@/lib/gsap";
 
 const SERVICES = [
     {
@@ -7,7 +16,6 @@ const SERVICES = [
         title: "Anxiety & overthinking",
         image: "/image/service-01.webp",
         alt: "Woman with closed eyes while a therapist rests a hand on her forehead",
-        // 2 rows = 480px
         className: "md:row-span-2 md:col-span-1 md:h-[480px]",
     },
     {
@@ -15,7 +23,6 @@ const SERVICES = [
         title: "Confidence & self-belief",
         image: "/image/service-02.webp",
         alt: "Woman sitting calmly with eyes closed while Lina stands behind her",
-        // 2 rows = 480px
         className: "md:row-span-2 md:col-span-1 md:h-[480px]",
     },
     {
@@ -23,7 +30,6 @@ const SERVICES = [
         title: "Stress & emotional overload",
         image: "/image/service-03.webp",
         alt: "Man lying down while a therapist places a hand near his head",
-        // 1 row = 232px (derived from 480px / 2 rows)
         className: "md:col-span-2 md:h-[232px]",
     },
     {
@@ -31,7 +37,6 @@ const SERVICES = [
         title: "Habits & unwanted patterns",
         image: "/image/service-04.webp",
         alt: "Woman lying on a mat as a therapist kneels beside her",
-        // 1 row = 232px
         className: "md:col-span-2 md:h-[232px]",
     },
     {
@@ -39,18 +44,90 @@ const SERVICES = [
         title: "Fears & phobias",
         image: "/image/service-05.webp",
         alt: "Therapist holding a hand above a person resting on a cushion",
-        // 1 row = 232px
         className: "md:col-span-2 md:h-[232px]",
     },
 ];
 
-const EASE = "ease-[cubic-bezier(.22,1,.36,1)]";
-
 export default function Services() {
+    const sectionRef = useRef<HTMLElement>(null);
+
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+
+            mm.add(NO_REDUCED_MOTION, () => {
+                gsap.from("[data-services-head] > *", {
+                    y: 30,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                    stagger: 0.12,
+                    scrollTrigger: {
+                        trigger: "[data-services-head]",
+                        start: "top 85%",
+                        once: true,
+                    },
+                });
+
+                gsap.from("[data-service]", {
+                    scale: 0.9,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                    stagger: { each: 0.1, from: "start" },
+                    clearProps: "opacity,transform",
+                    scrollTrigger: {
+                        trigger: "[data-services-grid]",
+                        start: "top 85%",
+                        once: true,
+                    },
+                });
+            });
+
+            mm.add(`${NO_REDUCED_MOTION} and ${FINE_POINTER}`, () => {
+                const cleanups: (() => void)[] = [];
+
+                gsap.utils
+                    .toArray<HTMLElement>("[data-service-hover]")
+                    .forEach((card) => {
+                        const img = card.querySelector("[data-service-img]");
+                        const label = card.querySelector("[data-service-label]");
+                        const num = card.querySelector("[data-service-num]");
+
+                        const tl = gsap
+                            .timeline({ paused: true, defaults: { ease: "power3.out", duration: 0.7 } })
+                            .to(img, { scale: 1.05 }, 0)
+                            .to(label, { y: -6 }, 0)
+                            .to(num, { y: 4 }, 0);
+
+                        const enter = () => tl.play();
+                        const leave = () => tl.reverse();
+                        card.addEventListener("pointerenter", enter);
+                        card.addEventListener("pointerleave", leave);
+                        cleanups.push(() => {
+                            card.removeEventListener("pointerenter", enter);
+                            card.removeEventListener("pointerleave", leave);
+                            tl.kill();
+                        });
+                    });
+
+                return () => cleanups.forEach((fn) => fn());
+            });
+        },
+        { scope: sectionRef },
+    );
+
     return (
-        <section id="services" className="w-full bg-[#F4F2EE]">
+        <section
+            ref={sectionRef}
+            id="services"
+            className="w-full bg-[#F4F2EE]"
+        >
             <div className="mx-auto w-full max-w-7xl px-4 py-16 sm:py-20 lg:py-24">
-                <div className="mx-auto max-w-xl text-center">
+                <div
+                    data-services-head
+                    className="mx-auto max-w-xl text-center"
+                >
                     <h2 className="font-serif text-3xl font-medium italic leading-[1.1] tracking-tight text-[#1C1B17] sm:text-4xl md:text-5xl">
                         What are you ready to change?
                     </h2>
@@ -61,19 +138,24 @@ export default function Services() {
                     </p>
                 </div>
 
-                {/* Updated auto-rows to 232px to match the new row height math */}
-                <ul className="mt-10 grid grid-cols-1 gap-3 sm:mt-12 md:grid-cols-4 md:auto-rows-58 md:gap-4">
+                <ul
+                    data-services-grid
+                    className="mt-10 grid grid-cols-1 gap-3 sm:mt-12 md:grid-cols-4 md:auto-rows-58 md:gap-4"
+                >
                     {SERVICES.map((s) => (
                         <li
                             key={s.id}
-                            className={`group relative overflow-hidden rounded-2xl h-64 ${s.className}`}
+                            data-service
+                            data-service-hover
+                            className={`relative overflow-hidden rounded-2xl h-64 ${s.className}`}
                         >
                             <Image
+                                data-service-img
                                 src={s.image}
                                 alt={s.alt}
                                 fill
                                 sizes="(min-width: 768px) 50vw, 100vw"
-                                className={`object-cover transition-transform duration-700 group-hover:scale-105 motion-reduce:transition-none ${EASE}`}
+                                className="object-cover"
                             />
 
                             <div
@@ -87,10 +169,16 @@ export default function Services() {
                                 }}
                             />
 
-                            <span className="absolute left-4 top-3 font-serif text-lg md:text-2xl italic text-white">
+                            <span
+                                data-service-num
+                                className="absolute left-4 top-3 font-serif text-lg md:text-2xl italic text-white"
+                            >
                                 {s.id}
                             </span>
-                            <h3 className="absolute bottom-4 left-4 right-4 text-lg  text-white md:text-[22px]">
+                            <h3
+                                data-service-label
+                                className="absolute bottom-4 left-4 right-4 text-lg  text-white md:text-[22px]"
+                            >
                                 {s.title}
                             </h3>
                         </li>
@@ -98,6 +186,7 @@ export default function Services() {
 
                     {/* 06 – text card */}
                     <li
+                        data-service
                         className="relative flex h-64 flex-col overflow-hidden rounded-2xl bg-white bg-cover bg-center p-5 md:col-span-2 md:h-58"
                         style={{
                             backgroundImage: "url('/image/card-bg.png')",
@@ -142,3 +231,4 @@ export default function Services() {
         </section>
     );
 }
+

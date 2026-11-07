@@ -1,8 +1,7 @@
 "use client";
 
-import { ReactNode, useEffect, useId, useRef } from "react";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ReactNode, useId, useRef } from "react";
+import { gsap, NO_REDUCED_MOTION, useGSAP } from "@/lib/gsap";
 
 const STEPS = [
     {
@@ -31,31 +30,56 @@ const STEPS = [
 export default function Approach() {
     const sectionRef = useRef<HTMLElement>(null);
 
-    useEffect(() => {
-        gsap.registerPlugin(ScrollTrigger);
-
-        const mm = gsap.matchMedia();
-        mm.add("(prefers-reduced-motion: no-preference)", () => {
-            const ctx = gsap.context(() => {
-                gsap.from("[data-step]", {
-                    y: 32,
-                    opacity: 0,
-                    duration: 1,
-                    ease: "power3.out",
-                    stagger: 0.15,
+    useGSAP(
+        () => {
+            const mm = gsap.matchMedia();
+            mm.add(NO_REDUCED_MOTION, () => {
+                const tl = gsap.timeline({
                     scrollTrigger: {
                         trigger: "[data-steps]",
                         start: "top 80%",
                         once: true,
                     },
                 });
-            }, sectionRef);
 
-            return () => ctx.revert();
-        });
+                tl.from("[data-step]", {
+                    y: 32,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                    stagger: 0.15,
+                    clearProps: "opacity,transform",
+                }).from(
+                    "[data-badge]",
+                    {
+                        scale: 0.8,
+                        duration: 1.1,
+                        ease: "back.out(1.6)",
+                        stagger: 0.15,
+                    },
+                    0.1,
+                );
 
-        return () => mm.revert();
-    }, []);
+                const pulses = gsap.fromTo(
+                    "[data-badge-shape]",
+                    { scale: 1 },
+                    {
+                        scale: 1.05,
+                        duration: 2.4,
+                        ease: "sine.inOut",
+                        yoyo: true,
+                        repeat: -1,
+                        stagger: 0.4,
+                        paused: true,
+                    },
+                );
+                tl.add(() => {
+                    pulses.play();
+                });
+            });
+        },
+        { scope: sectionRef },
+    );
 
     return (
         <section
@@ -98,7 +122,6 @@ export default function Approach() {
 
 /* ---------- scalloped badge ---------- */
 
-// Wavy circle: r + amp * cos(lobes * θ). Deterministic, so SSR and client match.
 function scallopPath(r: number, amp: number, lobes: number, steps = 240) {
     let d = "";
     for (let i = 0; i < steps; i++) {
@@ -117,8 +140,12 @@ function Badge({ children }: { children: ReactNode }) {
     const gradientId = `badge-${useId().replace(/:/g, "")}`;
 
     return (
-        <span className="relative grid h-24 w-24 place-items-center sm:h-28 sm:w-28">
+        <span
+            data-badge
+            className="relative grid h-24 w-24 place-items-center sm:h-28 sm:w-28"
+        >
             <svg
+                data-badge-shape
                 aria-hidden
                 viewBox="0 0 100 100"
                 className="absolute inset-0 h-full w-full"
@@ -184,3 +211,4 @@ function PuzzleIcon() {
         </svg>
     );
 }
+

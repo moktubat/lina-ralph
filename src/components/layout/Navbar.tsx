@@ -1,6 +1,6 @@
 "use client";
 
-import { MouseEvent, useEffect, useState } from "react";
+import { MouseEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Button from "@/components/ui/Button";
 import {
@@ -8,6 +8,7 @@ import {
     useLenis,
 } from "@/components/providers/SmoothScrollProvider";
 import Image from "next/image";
+import { gsap, prefersReducedMotion, useGSAP } from "@/lib/gsap";
 
 const NAV_LINKS = [
     { label: "Process", href: "#process" },
@@ -22,6 +23,47 @@ export default function Navbar() {
     const [open, setOpen] = useState(false);
     const lenis = useLenis();
     const scrollToAnchor = useAnchorScroll();
+    const menuRef = useRef<HTMLDivElement>(null);
+    const prevOpen = useRef(false);
+
+    // Mobile menu
+    useGSAP(
+        () => {
+            if (prevOpen.current === open) return;
+            prevOpen.current = open;
+
+            const items = gsap.utils.toArray<HTMLElement>("[data-menu-item]");
+            if (prefersReducedMotion()) {
+                gsap.set(items, { y: 0, opacity: open ? 1 : 0 });
+                return;
+            }
+
+            if (open) {
+                gsap.fromTo(
+                    items,
+                    { y: 32, opacity: 0 },
+                    {
+                        y: 0,
+                        opacity: 1,
+                        duration: 0.8,
+                        delay: 0.15,
+                        ease: "power4.out",
+                        stagger: 0.08,
+                        overwrite: "auto",
+                    },
+                );
+            } else {
+                gsap.to(items, {
+                    y: 16,
+                    opacity: 0,
+                    duration: 0.3,
+                    ease: "power2.in",
+                    overwrite: "auto",
+                });
+            }
+        },
+        { scope: menuRef, dependencies: [open] },
+    );
 
     useEffect(() => {
         if (!open) return;
@@ -126,6 +168,7 @@ export default function Navbar() {
 
             {/* Mobile / tablet menu */}
             <div
+                ref={menuRef}
                 id="mobile-menu"
                 aria-hidden={!open}
                 data-lenis-prevent
@@ -151,15 +194,8 @@ export default function Navbar() {
                                 <Link
                                     href={link.href}
                                     onClick={(e) => handleAnchor(e, link.href)}
-                                    className={`flex items-baseline gap-4 py-5 font-serif text-3xl italic text-white outline-none transition-[transform,opacity] duration-700 motion-reduce:transition-none focus-visible:text-[#E8E39A] sm:text-4xl ${EASE} ${open
-                                        ? "translate-y-0 opacity-100"
-                                        : "translate-y-8 opacity-0"
-                                        }`}
-                                    style={{
-                                        transitionDelay: open
-                                            ? `${150 + i * 80}ms`
-                                            : "0ms",
-                                    }}
+                                    data-menu-item
+                                    className="flex items-baseline gap-4 py-5 font-serif text-3xl italic text-white outline-none focus-visible:text-[#E8E39A] sm:text-4xl"
                                 >
                                     <span className="font-sans text-xs not-italic text-white/50">
                                         0{i + 1}
@@ -170,13 +206,7 @@ export default function Navbar() {
                         ))}
                     </ul>
 
-                    <div
-                        className={`mt-auto pt-12 transition-[transform,opacity] duration-700 motion-reduce:transition-none ${EASE} ${open
-                            ? "translate-y-0 opacity-100"
-                            : "translate-y-8 opacity-0"
-                            }`}
-                        style={{ transitionDelay: open ? "520ms" : "0ms" }}
-                    >
+                    <div data-menu-item className="mt-auto pt-12">
                         <Button
                             variant="primary"
                             href="#contact"
