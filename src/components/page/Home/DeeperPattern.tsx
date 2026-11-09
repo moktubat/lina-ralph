@@ -60,6 +60,7 @@ const PENDULUM_PIVOT = "50% 0%";
 export default function DeeperPattern() {
     const [active, setActive] = useState(0);
     const sectionRef = useRef<HTMLElement>(null);
+    const stageRef = useRef<HTMLDivElement>(null);
     const pinTriggerRef = useRef<ScrollTrigger | null>(null);
     const imageRefs = useRef<(HTMLImageElement | null)[]>([]);
     const quoteListRefs = useRef<(HTMLUListElement | null)[]>([]);
@@ -69,8 +70,8 @@ export default function DeeperPattern() {
 
     useGSAP(
         () => {
-            const section = sectionRef.current;
-            if (!section) return;
+            const stage = stageRef.current;
+            if (!stage) return;
 
             const onUpdate = (self: ScrollTrigger) => {
                 const i = Math.min(
@@ -85,12 +86,13 @@ export default function DeeperPattern() {
 
             const mm = gsap.matchMedia();
 
+            // Desktop: pin only the stage div
             mm.add(`${NO_REDUCED_MOTION} and (min-width: 1024px)`, () => {
                 const st = ScrollTrigger.create({
-                    trigger: section,
+                    trigger: stage,
                     start: () =>
-                        section.offsetHeight <= window.innerHeight
-                            ? "top top"
+                        stage.offsetHeight <= window.innerHeight
+                            ? "center center"
                             : "bottom bottom",
                     end: () => `+=${window.innerHeight * 1.5}`,
                     pin: true,
@@ -106,9 +108,10 @@ export default function DeeperPattern() {
                 };
             });
 
+            // Tablet / mobile: no pin, same as before
             mm.add(`${NO_REDUCED_MOTION} and (max-width: 1023px)`, () => {
                 const st = ScrollTrigger.create({
-                    trigger: section,
+                    trigger: stage,
                     start: "top 45%",
                     end: "bottom 75%",
                     onUpdate,
@@ -145,24 +148,28 @@ export default function DeeperPattern() {
 
                 quoteListRefs.current.forEach((ul, i) => {
                     if (!ul) return;
-                    const items = ul.children;
+                    const items = Array.from(ul.children);
+                    gsap.killTweensOf(items);
+
                     if (i === active) {
+                        gsap.set(items, {
+                            opacity: 0,
+                            y: reduce ? 0 : 8,
+                        });
+
                         gsap.to(items, {
                             opacity: 1,
                             y: 0,
                             duration: d,
-                            delay: reduce ? 0 : 0.15,
+                            delay: reduce ? 0 : 0.1,
                             stagger: reduce ? 0 : 0.09,
                             ease: GSAP_EASE,
-                            overwrite: "auto",
+                            overwrite: true,
                         });
                     } else {
-                        gsap.to(items, {
+                        gsap.set(items, {
                             opacity: 0,
                             y: 8,
-                            duration: reduce ? 0 : 0.35,
-                            ease: "power2.out",
-                            overwrite: "auto",
                         });
                     }
                 });
@@ -208,6 +215,12 @@ export default function DeeperPattern() {
         }
     };
 
+    useGSAP(() => {
+        const refresh = () => ScrollTrigger.refresh();
+        window.addEventListener("load", refresh);
+        return () => window.removeEventListener("load", refresh);
+    }, []);
+
     return (
         <section
             ref={sectionRef}
@@ -220,14 +233,19 @@ export default function DeeperPattern() {
                 `,
             }}
         >
-            <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:py-24">
-                <div className="grid gap-4 md:grid-cols-2 md:gap-x-4 md:gap-y-10 lg:grid-cols-[repeat(3,minmax(0,410px))] lg:justify-center lg:gap-x-6 lg:gap-y-16">
-                    {/* Heading */}
-                    <h2 className="max-w-md font-serif text-3xl italic leading-[1.15] tracking-tight sm:text-4xl md:col-span-2 lg:col-span-2 lg:row-start-1 lg:max-w-175 lg:text-5xl">
+            <div className="mx-auto w-full max-w-7xl px-4 pt-12 pb-12 sm:px-6 sm:pt-16 sm:pb-16 lg:pt-24 lg:pb-24">
+                {/* Heading (scrolls normally) */}
+                <div className="mx-auto mb-4 w-full max-w-[1278px] md:mb-10 lg:mb-16">
+                    <h2 className="max-w-md font-serif text-3xl italic leading-[1.15] tracking-tight sm:text-4xl lg:max-w-175 lg:text-5xl">
                         Your conscious mind can want one thing while your
                         patterns keep pulling you somewhere else.
                     </h2>
+                </div>
 
+                <div
+                    ref={stageRef}
+                    className="grid gap-4 md:grid-cols-2 md:gap-x-4 md:gap-y-10 lg:grid-cols-[repeat(3,minmax(0,410px))] lg:justify-center lg:gap-x-6"
+                >
                     {/* Tabs */}
                     <div className="flex w-full flex-col justify-between gap-10 md:col-span-2 md:w-full md:max-w-[410px] lg:col-span-1 lg:row-start-2">
                         <div
@@ -330,7 +348,7 @@ export default function DeeperPattern() {
                     </div>
                 </div>
             </div>
-        </section>
+        </section >
     );
 }
 

@@ -20,7 +20,7 @@ type ButtonProps = {
     onClick?: MouseEventHandler<HTMLElement>;
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "onClick">;
 
-const MAGNET_MAX = 10; // px
+const MAGNET_MAX = 6; // px
 
 const PRIMARY_BG = `
     radial-gradient(at 0% 0%, #FF9C00 0%, transparent 50%),
@@ -66,7 +66,7 @@ export default function Button({
                         x: 0,
                         y: 0,
                         duration: 0.8,
-                        ease: "elastic.out(1, 0.4)",
+                        ease: "power4.out",
                         overwrite: "auto",
                     });
 

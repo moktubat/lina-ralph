@@ -87,29 +87,68 @@ export default function Services() {
             mm.add(`${NO_REDUCED_MOTION} and ${FINE_POINTER}`, () => {
                 const cleanups: (() => void)[] = [];
 
-                gsap.utils
-                    .toArray<HTMLElement>("[data-service-hover]")
-                    .forEach((card) => {
-                        const img = card.querySelector("[data-service-img]");
-                        const label = card.querySelector("[data-service-label]");
-                        const num = card.querySelector("[data-service-num]");
+                gsap.utils.toArray<HTMLElement>("[data-service-hover]").forEach((card) => {
+                    const img = card.querySelector("[data-service-img]");
+                    const label = card.querySelector("[data-service-label]");
+                    const num = card.querySelector("[data-service-num]");
 
-                        const tl = gsap
-                            .timeline({ paused: true, defaults: { ease: "power3.out", duration: 0.7 } })
-                            .to(img, { scale: 1.05 }, 0)
-                            .to(label, { y: -6 }, 0)
-                            .to(num, { y: 4 }, 0);
-
-                        const enter = () => tl.play();
-                        const leave = () => tl.reverse();
-                        card.addEventListener("pointerenter", enter);
-                        card.addEventListener("pointerleave", leave);
-                        cleanups.push(() => {
-                            card.removeEventListener("pointerenter", enter);
-                            card.removeEventListener("pointerleave", leave);
-                            tl.kill();
+                    // Natural hover in
+                    const enter = () => {
+                        gsap.to(img, {
+                            scale: 1.045,
+                            duration: 1.4,
+                            ease: "power2.out",
+                            overwrite: "auto",
                         });
+
+                        gsap.to(label, {
+                            y: -5,
+                            duration: 0.85,
+                            ease: "power3.out",
+                            overwrite: "auto",
+                        });
+
+                        gsap.to(num, {
+                            y: 3,
+                            duration: 0.9,
+                            ease: "power2.out",
+                            overwrite: "auto",
+                        });
+                    };
+
+                    // Soft natural return
+                    const leave = () => {
+                        gsap.to(img, {
+                            scale: 1,
+                            duration: 1.6,
+                            ease: "power2.inOut",
+                            overwrite: "auto",
+                        });
+
+                        gsap.to(label, {
+                            y: 0,
+                            duration: 1.1,
+                            ease: "power2.inOut",
+                            overwrite: "auto",
+                        });
+
+                        gsap.to(num, {
+                            y: 0,
+                            duration: 1,
+                            ease: "power2.inOut",
+                            overwrite: "auto",
+                        });
+                    };
+
+                    card.addEventListener("pointerenter", enter);
+                    card.addEventListener("pointerleave", leave);
+
+                    cleanups.push(() => {
+                        card.removeEventListener("pointerenter", enter);
+                        card.removeEventListener("pointerleave", leave);
+                        gsap.killTweensOf([img, label, num]);
                     });
+                });
 
                 return () => cleanups.forEach((fn) => fn());
             });
